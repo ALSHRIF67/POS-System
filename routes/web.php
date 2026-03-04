@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\DashboardController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -35,7 +36,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+  
+    // Make sure the dashboard route uses the DashboardController
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     
 // Route for the main menu management view - هذا هو الرابط الرئيسي للصفحة
