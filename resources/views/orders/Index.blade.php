@@ -1,0 +1,1075 @@
+{{-- resources/views/orders/index.blade.php --}}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>نقاط البيع - مطعم الأصيل</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #f3f4f6;
+        }
+        
+        /* Touch-friendly styles */
+        .touch-button {
+            min-height: 60px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .touch-button:active {
+            transform: scale(0.98);
+        }
+        
+        /* Product card */
+        .product-card {
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            user-select: none;
+            min-height: 160px;
+        }
+        
+        .product-card:active {
+            border-color: #6C63FF;
+            background: #f5f3ff;
+        }
+        
+        .product-card.out-of-stock {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        /* Quantity buttons */
+        .qty-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .qty-btn:active {
+            transform: scale(0.9);
+        }
+        
+        /* Remove button */
+        .remove-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            color: #ef4444;
+            transition: all 0.2s;
+        }
+        
+        .remove-btn:active {
+            background: #fee2e2;
+        }
+        
+        /* Scrollbar */
+        .scrollbar-custom::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollbar-custom::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+            background: #c7c7c7;
+            border-radius: 10px;
+        }
+        
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: white;
+            padding: 16px 24px;
+            border-radius: 50px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            transition: transform 0.3s;
+            border-right: 4px solid;
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .notification.success {
+            border-right-color: #10b981;
+        }
+        
+        .notification.error {
+            border-right-color: #ef4444;
+        }
+        
+        /* Receipt modal */
+        .receipt-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .receipt-modal.active {
+            display: flex;
+        }
+        
+        .receipt-content {
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #6C63FF;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Sidebar styles - FIXED */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            right: -100%;
+            width: 280px;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            z-index: 50;
+            overflow-y: auto;
+            transition: right 0.3s ease-in-out;
+        }
+
+        .sidebar.open {
+            right: 0;
+        }
+
+        @media (min-width: 1024px) {
+            .sidebar {
+                right: 0;
+            }
+            
+            .main-content {
+                margin-right: 280px;
+                transition: margin-right 0.3s ease;
+            }
+            
+            /* Hide close button on desktop */
+            .sidebar .close-btn {
+                display: none;
+            }
+        }
+
+        /* Overlay - FIXED: Lower z-index to not block clicks completely */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 45;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none; /* Allow clicks to pass through when hidden */
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto; /* Block clicks only when active */
+        }
+
+        @media (min-width: 1024px) {
+            .sidebar-overlay {
+                display: none;
+            }
+        }
+
+        /* Hamburger button - only on mobile */
+        .hamburger-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 46; /* Above overlay but below sidebar */
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+        }
+
+        .hamburger-btn:hover {
+            background: #6C63FF;
+            color: white;
+        }
+
+        .hamburger-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (min-width: 1024px) {
+            .hamburger-btn {
+                display: none;
+            }
+        }
+
+        /* Close button inside sidebar */
+        .sidebar .close-btn {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 51;
+            border: none;
+        }
+
+        .sidebar .close-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .sidebar .close-btn i {
+            color: #4b5563;
+            font-size: 1.1rem;
+        }
+
+        @media (min-width: 1024px) {
+            .sidebar .close-btn {
+                display: none;
+            }
+        }
+
+        /* Mobile body scroll lock */
+        body.sidebar-open {
+            overflow: hidden;
+        }
+        
+        /* Main content scrolling */
+        .main-content {
+            height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Ensure product cards are clickable on mobile */
+        .product-card {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="p-4">
+
+<!-- Notification -->
+<div id="notification" class="notification"></div>
+
+<!-- Receipt Modal -->
+<div id="receiptModal" class="receipt-modal">
+    <div class="receipt-content" id="receiptContent"></div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[60]">
+    <div class="bg-white p-8 rounded-2xl text-center">
+        <div class="spinner mx-auto mb-4"></div>
+        <p class="text-gray-600">جاري حفظ الطلب...</p>
+    </div>
+</div>
+
+<!-- Hamburger Button (only visible on mobile) -->
+<button id="hamburgerBtn" class="hamburger-btn" aria-label="Toggle menu">
+    <i class="fas fa-bars text-xl"></i>
+</button>
+
+<!-- Sidebar Overlay (mobile only) - FIXED: Now properly blocks/clicks -->
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<!-- ================= SIDEBAR ================= -->
+<aside id="sidebar" class="sidebar w-72 bg-white/90 backdrop-blur-lg shadow-2xl p-8 overflow-y-auto border-l border-[#6C63FF]/10">
+    
+    <!-- Close Button (mobile only) -->
+    <button id="closeSidebarBtn" class="close-btn">
+        <i class="fas fa-times"></i>
+    </button>
+
+    <div class="mb-10">
+        <div class="flex items-center gap-2 mb-2">
+            <div class="w-10 h-10 bg-gradient-to-br from-[#6C63FF] to-[#C084FC] rounded-2xl flex items-center justify-center shadow-xl">
+                <i class="fas fa-utensils text-white text-lg"></i>
+            </div>
+            <h1 class="text-3xl font-bold">
+                <span class="bg-gradient-to-l from-[#6C63FF] to-[#FF6B6B] bg-clip-text text-transparent">Menu</span>
+                <span class="text-gray-800">Master</span>
+            </h1>
+        </div>
+        <p class="text-sm text-gray-500 mt-1">نظام إدارة المطعم</p>
+    </div>
+
+    <!-- قائمة التنقل -->
+    <nav class="space-y-2">
+        @php
+            $menuItems = [
+                ['name' => 'لوحة التحكم', 'icon' => 'fa-chart-pie'],
+                ['name' => 'المبيعات', 'icon' => 'fa-chart-line'],
+                ['name' => 'الأصناف', 'icon' => 'fa-cubes'],
+                ['name' => 'الموظفين', 'icon' => 'fa-users'],
+                ['name' => 'الفواتير', 'icon' => 'fa-file-invoice'],
+                ['name' => 'التحليل اليومي', 'icon' => 'fa-calendar-alt'],
+            ];
+        @endphp
+        
+        @foreach($menuItems as $menu)
+        <a href="#" 
+           class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium group text-gray-600 hover:bg-[#6C63FF]/10 hover:text-[#6C63FF]">
+            <i class="fas {{ $menu['icon'] }} ml-3 text-lg group-hover:scale-110 transition-transform"></i>
+            <span>{{ $menu['name'] }}</span>
+        </a>
+        @endforeach
+    </nav>
+
+    <!-- معلومات المستخدم -->
+    <div class="absolute bottom-8 right-8 left-8">
+        <div class="border-t border-[#6C63FF]/20 pt-6">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6C63FF] to-[#FF6B6B] flex items-center justify-center shadow-xl transform rotate-3 hover:rotate-0 transition-transform">
+                    <span class="text-white font-bold text-xl">
+                        {{ auth()->user()->name[0] ?? 'أ' }}
+                    </span>
+                </div>
+                <div>
+                    <p class="text-base font-bold text-gray-800">
+                        {{ auth()->user()->name ?? 'أحمد محمد' }}
+                    </p>
+                    <p class="text-sm text-[#6C63FF] flex items-center gap-1">
+                        <i class="fas fa-crown text-xs"></i>
+                        {{ auth()->user()->role === 'admin' ? 'مدير المطعم' : 'موظف' }}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- أزرار سريعة -->
+            <div class="mt-4 grid grid-cols-3 gap-2">
+                <button class="p-2 rounded-xl bg-[#6C63FF]/10 text-[#6C63FF] hover:bg-[#6C63FF] hover:text-white transition-all text-center">
+                    <i class="fas fa-moon text-sm"></i>
+                </button>
+                <button class="p-2 rounded-xl bg-[#6C63FF]/10 text-[#6C63FF] hover:bg-[#6C63FF] hover:text-white transition-all text-center">
+                    <i class="fas fa-bell text-sm"></i>
+                </button>
+                <button class="p-2 rounded-xl bg-[#6C63FF]/10 text-[#6C63FF] hover:bg-[#6C63FF] hover:text-white transition-all text-center">
+                    <i class="fas fa-sign-out-alt text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Content (Scrollable) -->
+<main id="mainContent" class="main-content">
+    <div class="flex flex-col lg:flex-row gap-4 p-4 min-h-full">
+        
+        {{-- ========== PRODUCTS SECTION (60%) ========== --}}
+        <div class="lg:w-3/5 bg-white rounded-2xl shadow-lg p-4 flex flex-col h-full overflow-hidden">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-utensils ml-2 text-[#6C63FF]"></i>
+                    القائمة
+                </h2>
+                <div class="text-sm text-gray-500">
+                    <span id="productCount">{{ count($products) }}</span> صنف متاح
+                </div>
+            </div>
+            
+            <!-- Search -->
+            <div class="mb-4">
+                <div class="relative">
+                    <i class="fas fa-search absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" 
+                           id="searchInput"
+                           placeholder="ابحث عن صنف..." 
+                           class="w-full pr-12 pl-4 py-4 border-2 border-gray-200 rounded-2xl focus:border-[#6C63FF] focus:outline-none text-lg">
+                </div>
+            </div>
+            
+            <!-- Categories -->
+            <div class="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-custom">
+                <button class="category-btn active px-6 py-3 bg-[#6C63FF] text-white rounded-xl font-bold whitespace-nowrap touch-button" data-category="all">
+                    الكل
+                </button>
+                @php
+                    $categories = $products->pluck('category')->unique();
+                @endphp
+                @foreach($categories as $category)
+                <button class="category-btn px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-[#6C63FF] hover:text-white transition whitespace-nowrap touch-button" 
+                        data-category="{{ $category }}">
+                    {{ $category }}
+                </button>
+                @endforeach
+            </div>
+            
+            <!-- Products Grid (Scrollable) -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto scrollbar-custom p-1 flex-1" id="productsGrid">
+                @foreach($products as $product)
+                <div class="product-card bg-gradient-to-br from-white to-gray-50 border-2 border-gray-100 rounded-2xl p-4 cursor-pointer touch-button hover:shadow-lg
+                            {{ (!$product->track_inventory || $product->quantity > 0) ? '' : 'out-of-stock' }}"
+                     data-id="{{ $product->id }}"
+                     data-name="{{ $product->name }}"
+                     data-price="{{ $product->price }}"
+                     data-category="{{ $product->category }}"
+                     data-stock="{{ $product->quantity }}"
+                     data-track="{{ $product->track_inventory }}"
+                     data-available="{{ (!$product->track_inventory || $product->quantity > 0) ? 'true' : 'false' }}">
+                    
+                    <!-- Product Icon -->
+                    <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-[#6C63FF]/20 to-[#FF6B6B]/20 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-utensils text-3xl text-[#6C63FF]"></i>
+                    </div>
+                    
+                    <!-- Product Info -->
+                    <h3 class="font-bold text-gray-800 text-center text-lg mb-1">{{ $product->name }}</h3>
+                    <p class="text-[#6C63FF] font-bold text-center text-xl">
+                        {{ number_format($product->price, 2) }} <span class="text-sm">ر.س</span>
+                    </p>
+                    
+                    <!-- Stock Indicator -->
+                    @if($product->track_inventory)
+                        <div class="text-center mt-2">
+                            <span class="inline-block px-3 py-1 text-xs rounded-full 
+                                @if($product->quantity > 10) bg-green-100 text-green-600
+                                @elseif($product->quantity > 0) bg-yellow-100 text-yellow-600
+                                @else bg-red-100 text-red-600 @endif">
+                                <i class="fas 
+                                    @if($product->quantity > 10) fa-check-circle
+                                    @elseif($product->quantity > 0) fa-exclamation-circle
+                                    @else fa-times-circle @endif ml-1">
+                                </i>
+                                {{ $product->quantity > 0 ? $product->quantity . ' متبقي' : 'غير متوفر' }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+        </div>
+        
+        {{-- ========== ORDER SECTION (40%) ========== --}}
+        <div class="lg:w-2/5 bg-white rounded-2xl shadow-lg flex flex-col h-full overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-l from-[#6C63FF] to-[#FF6B6B] p-4">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-shopping-cart"></i>
+                    الطلب الحالي
+                    <span class="bg-white text-[#6C63FF] text-sm px-3 py-1 rounded-full mr-auto" id="itemCount">0</span>
+                </h2>
+            </div>
+            
+            <!-- Order Items Table (Scrollable) -->
+            <div class="flex-1 overflow-y-auto scrollbar-custom p-4" id="orderItemsContainer">
+                <table class="w-full">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="p-3 text-right">الصنف</th>
+                            <th class="p-3 text-center">السعر</th>
+                            <th class="p-3 text-center">الكمية</th>
+                            <th class="p-3 text-center">الإجمالي</th>
+                            <th class="p-3 text-center"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderItemsList">
+                        <!-- Order items will be dynamically added here -->
+                    </tbody>
+                </table>
+                
+                <!-- Empty State -->
+                <div id="emptyOrder" class="text-center py-12">
+                    <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-shopping-basket text-4xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500 text-lg">لم يتم إضافة أي أصناف</p>
+                    <p class="text-gray-400">اضغط على الأصناف لإضافتها</p>
+                </div>
+            </div>
+            
+            <!-- Order Summary (Fixed at bottom) -->
+            <div class="border-t p-4 bg-gray-50">
+                <!-- Subtotal -->
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-gray-600">المجموع الفرعي:</span>
+                    <span class="font-bold text-xl" id="subtotal">0.00 ر.س</span>
+                </div>
+                
+                <!-- Tax -->
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-gray-600">الضريبة (%):</span>
+                    <div class="flex items-center gap-2">
+                        <input type="number" 
+                               id="taxRate" 
+                               value="0" 
+                               min="0" 
+                               max="100" 
+                               step="0.1"
+                               class="w-20 p-2 border-2 border-gray-200 rounded-lg text-left focus:border-[#6C63FF] focus:outline-none">
+                        <span>%</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mb-3 text-sm text-gray-500">
+                    <span>قيمة الضريبة:</span>
+                    <span id="taxAmount">0.00 ر.س</span>
+                </div>
+                
+                <!-- Discount -->
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-gray-600">الخصم:</span>
+                    <input type="number" 
+                           id="discount" 
+                           value="0" 
+                           min="0" 
+                           step="0.5"
+                           class="w-24 p-2 border-2 border-gray-200 rounded-lg text-left focus:border-[#6C63FF] focus:outline-none">
+                </div>
+                
+                <!-- Grand Total -->
+                <div class="flex justify-between items-center mb-4 pt-3 border-t-2 border-gray-200">
+                    <span class="font-bold text-lg">الإجمالي النهائي:</span>
+                    <span class="font-bold text-2xl text-[#6C63FF]" id="grandTotal">0.00 ر.س</span>
+                </div>
+                
+                <!-- Notes -->
+                <textarea id="orderNotes" 
+                          placeholder="ملاحظات إضافية (اختياري)..."
+                          class="w-full p-3 border-2 border-gray-200 rounded-xl mb-3 focus:border-[#6C63FF] focus:outline-none"
+                          rows="2"></textarea>
+                
+                <!-- Payment Method -->
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <button class="payment-method-btn active bg-[#6C63FF] text-white p-3 rounded-xl font-bold touch-button" data-method="cash">
+                        <i class="fas fa-money-bill-wave ml-1"></i>
+                        نقدي
+                    </button>
+                    <button class="payment-method-btn bg-gray-100 text-gray-700 p-3 rounded-xl font-bold touch-button" data-method="card">
+                        <i class="fas fa-credit-card ml-1"></i>
+                        بطاقة
+                    </button>
+                    <button class="payment-method-btn bg-gray-100 text-gray-700 p-3 rounded-xl font-bold touch-button" data-method="wallet">
+                        <i class="fas fa-wallet ml-1"></i>
+                        محفظة
+                    </button>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="printOrder()" 
+                            class="bg-[#6C63FF] text-white p-4 rounded-xl font-bold text-lg hover:bg-[#5a52d5] transition-all touch-button flex items-center justify-center gap-2"
+                            id="printBtn">
+                        <i class="fas fa-print"></i>
+                        طباعة الفاتورة
+                    </button>
+                    
+                    <button onclick="clearOrder()" 
+                            class="bg-gray-200 text-gray-700 p-4 rounded-xl font-bold text-lg hover:bg-gray-300 transition-all touch-button flex items-center justify-center gap-2">
+                        <i class="fas fa-trash-alt"></i>
+                        تفريغ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Toggle Script - FIXED -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+        const body = document.body;
+        
+        // Check if elements exist before using them
+        if (!sidebar) {
+            console.error('Sidebar element not found!');
+            return;
+        }
+        
+        // Functions
+        function openSidebar() {
+            sidebar.classList.add('open');
+            if (overlay) overlay.classList.add('active');
+            body.classList.add('sidebar-open');
+        }
+        
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('active');
+            body.classList.remove('sidebar-open');
+        }
+        
+        // Event Listeners
+        if (hamburgerBtn) {
+            hamburgerBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                openSidebar();
+            });
+        }
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                closeSidebar();
+            });
+        }
+        
+        if (overlay) {
+            overlay.addEventListener('click', function(e) {
+                e.stopPropagation();
+                closeSidebar();
+            });
+        }
+        
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                closeSidebar();
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                // On desktop, ensure sidebar is visible
+                sidebar.classList.add('open');
+                if (overlay) overlay.classList.remove('active');
+                body.classList.remove('sidebar-open');
+            } else {
+                // On mobile, ensure sidebar is closed by default
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+                body.classList.remove('sidebar-open');
+            }
+        });
+
+        // Initialize based on screen size
+        if (window.innerWidth >= 1024) {
+            sidebar.classList.add('open');
+        }
+
+        // Ensure product cards are clickable - FIX: Remove any event blocking
+        document.querySelectorAll('.product-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                addToOrder(this);
+            });
+        });
+    });
+
+    // ==================== YOUR EXISTING POS JAVASCRIPT ====================
+    let orderItems = [];
+    let selectedPaymentMethod = 'cash';
+    
+    // DOM Elements
+    const productsGrid = document.getElementById('productsGrid');
+    const orderItemsList = document.getElementById('orderItemsList');
+    const emptyOrder = document.getElementById('emptyOrder');
+    const itemCount = document.getElementById('itemCount');
+    const subtotalEl = document.getElementById('subtotal');
+    const taxRate = document.getElementById('taxRate');
+    const taxAmount = document.getElementById('taxAmount');
+    const discount = document.getElementById('discount');
+    const grandTotal = document.getElementById('grandTotal');
+    
+    // ==================== INITIALIZATION ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        // Category filters
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.category-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-[#6C63FF]', 'text-white');
+                    b.classList.add('bg-gray-100', 'text-gray-700');
+                });
+                this.classList.add('active', 'bg-[#6C63FF]', 'text-white');
+                this.classList.remove('bg-gray-100', 'text-gray-700');
+                
+                filterByCategory(this.dataset.category);
+            });
+        });
+        
+        // Search input
+        document.getElementById('searchInput').addEventListener('input', function() {
+            searchProducts(this.value);
+        });
+        
+        // Payment method buttons
+        document.querySelectorAll('.payment-method-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.payment-method-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-[#6C63FF]', 'text-white');
+                    b.classList.add('bg-gray-100', 'text-gray-700');
+                });
+                this.classList.add('active', 'bg-[#6C63FF]', 'text-white');
+                this.classList.remove('bg-gray-100', 'text-gray-700');
+                
+                selectedPaymentMethod = this.dataset.method;
+            });
+        });
+        
+        // Tax and discount listeners
+        taxRate.addEventListener('input', updateTotals);
+        discount.addEventListener('input', updateTotals);
+    });
+    
+    // ==================== PRODUCT FILTERING ====================
+    function filterByCategory(category) {
+        const cards = document.querySelectorAll('.product-card');
+        
+        cards.forEach(card => {
+            if (category === 'all' || card.dataset.category === category) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    
+    function searchProducts(term) {
+        term = term.toLowerCase();
+        const cards = document.querySelectorAll('.product-card');
+        
+        cards.forEach(card => {
+            const name = card.dataset.name.toLowerCase();
+            if (name.includes(term)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    
+    // ==================== ORDER MANAGEMENT ====================
+    function addToOrder(productCard) {
+        // Check if product is available
+        if (productCard.dataset.available === 'false') {
+            showNotification('error', 'هذا الصنف غير متوفر حالياً');
+            return;
+        }
+        
+        const productId = parseInt(productCard.dataset.id);
+        const productName = productCard.dataset.name;
+        const productPrice = parseFloat(productCard.dataset.price);
+        const trackStock = productCard.dataset.track === '1';
+        const currentStock = parseInt(productCard.dataset.stock);
+        
+        // Check stock if tracking
+        if (trackStock && currentStock <= 0) {
+            showNotification('error', 'هذا الصنف غير متوفر حالياً');
+            return;
+        }
+        
+        // Find existing item
+        const existingItem = orderItems.find(item => item.id === productId);
+        
+        if (existingItem) {
+            // Check stock for increase
+            if (trackStock && existingItem.quantity >= currentStock) {
+                showNotification('error', 'لا يمكن إضافة المزيد - الكمية غير متوفرة');
+                return;
+            }
+            existingItem.quantity++;
+            existingItem.total = existingItem.price * existingItem.quantity;
+        } else {
+            orderItems.push({
+                id: productId,
+                name: productName,
+                price: productPrice,
+                quantity: 1,
+                total: productPrice
+            });
+        }
+        
+        renderOrderTable();
+        updateTotals();
+        
+        // Visual feedback
+        productCard.classList.add('border-[#6C63FF]');
+        setTimeout(() => {
+            productCard.classList.remove('border-[#6C63FF]');
+        }, 200);
+    }
+    
+    function renderOrderTable() {
+        if (orderItems.length === 0) {
+            emptyOrder.style.display = 'block';
+            orderItemsList.innerHTML = '';
+            itemCount.textContent = '0';
+            return;
+        }
+        
+        emptyOrder.style.display = 'none';
+        
+        let html = '';
+        orderItems.forEach((item, index) => {
+            html += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 font-medium">${item.name}</td>
+                    <td class="p-3 text-center">${item.price.toFixed(2)}</td>
+                    <td class="p-3">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="decreaseQuantity(${index})" 
+                                    class="qty-btn bg-red-100 text-red-600 hover:bg-red-200 touch-button">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span class="font-bold w-8 text-center">${item.quantity}</span>
+                            <button onclick="increaseQuantity(${index})" 
+                                    class="qty-btn bg-green-100 text-green-600 hover:bg-green-200 touch-button">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="p-3 text-center font-bold">${item.total.toFixed(2)}</td>
+                    <td class="p-3">
+                        <button onclick="removeItem(${index})" 
+                                class="remove-btn hover:bg-red-50 touch-button">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        orderItemsList.innerHTML = html;
+        itemCount.textContent = orderItems.reduce((sum, item) => sum + item.quantity, 0);
+    }
+    
+    function increaseQuantity(index) {
+        const item = orderItems[index];
+        const productCard = document.querySelector(`.product-card[data-id="${item.id}"]`);
+        
+        if (productCard && productCard.dataset.track === '1') {
+            const currentStock = parseInt(productCard.dataset.stock);
+            if (item.quantity >= currentStock) {
+                showNotification('error', 'لا يمكن إضافة المزيد - الكمية غير متوفرة');
+                return;
+            }
+        }
+        
+        item.quantity++;
+        item.total = item.price * item.quantity;
+        renderOrderTable();
+        updateTotals();
+    }
+    
+    function decreaseQuantity(index) {
+        const item = orderItems[index];
+        
+        if (item.quantity > 1) {
+            item.quantity--;
+            item.total = item.price * item.quantity;
+            renderOrderTable();
+        } else {
+            removeItem(index);
+        }
+        
+        updateTotals();
+    }
+    
+    function removeItem(index) {
+        orderItems.splice(index, 1);
+        renderOrderTable();
+        updateTotals();
+    }
+    
+    function clearOrder() {
+        if (orderItems.length === 0) return;
+        
+        if (confirm('هل أنت متأكد من تفريغ الطلب؟')) {
+            orderItems = [];
+            renderOrderTable();
+            updateTotals();
+            taxRate.value = 0;
+            discount.value = 0;
+        }
+    }
+    
+    // ==================== CALCULATIONS ====================
+    function updateTotals() {
+        const subtotal = orderItems.reduce((sum, item) => sum + item.total, 0);
+        const taxPercent = parseFloat(taxRate.value) || 0;
+        const taxValue = subtotal * (taxPercent / 100);
+        const discountValue = parseFloat(discount.value) || 0;
+        const total = subtotal + taxValue - discountValue;
+        
+        subtotalEl.textContent = subtotal.toFixed(2) + ' ر.س';
+        taxAmount.textContent = taxValue.toFixed(2) + ' ر.س';
+        grandTotal.textContent = total.toFixed(2) + ' ر.س';
+    }
+    
+    // ==================== PRINT ORDER ====================
+    async function printOrder() {
+        if (orderItems.length === 0) {
+            showNotification('error', 'الرجاء إضافة أصناف إلى الطلب');
+            return;
+        }
+        
+        const printBtn = document.getElementById('printBtn');
+        printBtn.disabled = true;
+        printBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+        
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        
+        try {
+            const orderData = {
+                items: orderItems.map(item => ({
+                    product_id: item.id,
+                    quantity: item.quantity
+                })),
+                tax: parseFloat(taxRate.value) || 0,
+                discount: parseFloat(discount.value) || 0,
+                payment_method: selectedPaymentMethod,
+                notes: document.getElementById('orderNotes').value
+            };
+            
+            const response = await fetch('{{ route("orders.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(orderData)
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.message || 'حدث خطأ في حفظ الطلب');
+            }
+            
+            // Show receipt
+            document.getElementById('receiptContent').innerHTML = result.receipt;
+            document.getElementById('receiptModal').classList.add('active');
+            
+            // Clear order
+            orderItems = [];
+            renderOrderTable();
+            updateTotals();
+            taxRate.value = 0;
+            discount.value = 0;
+            document.getElementById('orderNotes').value = '';
+            
+            showNotification('success', result.message);
+            
+        } catch (error) {
+            showNotification('error', error.message);
+        } finally {
+            printBtn.disabled = false;
+            printBtn.innerHTML = '<i class="fas fa-print"></i> طباعة الفاتورة';
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+    }
+    
+    // ==================== RECEIPT MODAL ====================
+    function closeReceipt() {
+        document.getElementById('receiptModal').classList.remove('active');
+    }
+    
+    function printReceipt() {
+        const receiptContent = document.getElementById('receiptContent').innerHTML;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html dir="rtl">
+                <head>
+                    <title>فاتورة الطلب</title>
+                    <style>
+                        body { 
+                            font-family: 'Cairo', monospace; 
+                            margin: 0; 
+                            padding: 10px;
+                            width: 80mm;
+                            margin: 0 auto;
+                        }
+                        @media print {
+                            body { margin: 0; padding: 5px; }
+                        }
+                    </style>
+                </head>
+                <body>${receiptContent}</body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+    }
+    
+    // ==================== UTILITIES ====================
+    function showNotification(type, message) {
+        const notification = document.getElementById('notification');
+        notification.className = `notification ${type} show`;
+        notification.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+</script>
+</body>
+</html>

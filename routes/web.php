@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\OrderController;
 
 
 /*
@@ -53,6 +54,9 @@ Route::get('/menu-stats', [MenuItemController::class, 'getStats'])->name('menu.s
 
 // Optional: If you want to make the menu-management the homepage
 // Route::get('/', [MenuItemController::class, 'index'])->name('home');
+
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 
 });
 

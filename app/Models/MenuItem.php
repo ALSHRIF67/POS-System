@@ -53,4 +53,11 @@ class MenuItem extends Model
     {
         return $this->status === 'available' || $this->status === 'unlimited';
     }
+   
+// app/Models/MenuItem.php - Add this relationship
+
+public function orderItems()
+{
+    return $this->hasMany(OrderItem::class, 'product_id');
+}
 }
