@@ -6,58 +6,39 @@ use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 */
 
-// Route for the main menu management view - هذا هو الرابط الرئيسي للصفحة
-Route::get('/menu-management', [MenuItemController::class, 'index'])->name('menu.management');
-
-// API-like routes for AJAX requests (using resource for full CRUD operations)
-Route::resource('menu-items', MenuItemController::class)->except(['create', 'edit']);
-
-// Optional: Dashboard stats route for AJAX updates
-Route::get('/menu-stats', [MenuItemController::class, 'getStats'])->name('menu.stats');
-
-// Optional: If you want to make the menu-management the homepage
-// Route::get('/', [MenuItemController::class, 'index'])->name('home');
-
+// Public route - welcome page
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Authenticated routes
+Route::middleware(['auth', 'verified'])->group(function () {
 
-Route::middleware('auth')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Optional: make / redirect to dashboard
+    Route::get('/home', [DashboardController::class, 'index'])->name('home');
+
+    // Profile management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-  
-    // Make sure the dashboard route uses the DashboardController
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    
-// Route for the main menu management view - هذا هو الرابط الرئيسي للصفحة
-Route::get('/menu-management', [MenuItemController::class, 'index'])->name('menu.management');
+    // Menu Management
+    Route::get('/menu-management', [MenuItemController::class, 'index'])->name('menu.management');
+    Route::resource('menu-items', MenuItemController::class)->except(['create', 'edit']);
+    Route::get('/menu-stats', [MenuItemController::class, 'getStats'])->name('menu.stats');
 
-// API-like routes for AJAX requests (using resource for full CRUD operations)
-Route::resource('menu-items', MenuItemController::class)->except(['create', 'edit']);
-
-// Optional: Dashboard stats route for AJAX updates
-Route::get('/menu-stats', [MenuItemController::class, 'getStats'])->name('menu.stats');
-
-// Optional: If you want to make the menu-management the homepage
-// Route::get('/', [MenuItemController::class, 'index'])->name('home');
-
+    // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-
 });
 
 require __DIR__.'/auth.php';

@@ -7,7 +7,7 @@ use App\Models\MenuItem;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class DashboardController extends Controller
+class DashboardController extends Controller // This extends the correct base Controller
 {
     public function index()
     {
@@ -173,6 +173,7 @@ class DashboardController extends Controller
         ];
         
         $colors = ['#6C63FF', '#FF6B6B', '#4ECDC4', '#FFD93D'];
+        $index = 0;
         
         $result = [];
         foreach ($categories as $key => $arabicName) {
@@ -181,8 +182,9 @@ class DashboardController extends Controller
                 $result[] = [
                     'name' => $arabicName,
                     'count' => $count,
-                    'color' => $colors[array_rand($colors)]
+                    'color' => $colors[$index % count($colors)]
                 ];
+                $index++;
             }
         }
         
@@ -191,34 +193,37 @@ class DashboardController extends Controller
     
     private function getArabicCategory($category)
     {
-        return match($category) {
+        $categories = [
             'appetizer' => 'مقبلات',
             'main' => 'أطباق رئيسية',
             'drink' => 'مشروبات',
-            'dessert' => 'حلويات',
-            default => $category
-        };
+            'dessert' => 'حلويات'
+        ];
+        
+        return $categories[$category] ?? $category;
     }
     
     private function getStatusText($status)
     {
-        return match($status) {
+        $statuses = [
             'available' => 'متوفر',
             'low_stock' => 'مخزون منخفض',
             'out_of_stock' => 'غير متوفر',
-            'unlimited' => 'غير محدود',
-            default => 'غير معروف'
-        };
+            'unlimited' => 'غير محدود'
+        ];
+        
+        return $statuses[$status] ?? 'غير معروف';
     }
     
     private function getStatusClass($status)
     {
-        return match($status) {
+        $classes = [
             'available' => 'bg-green-50 text-green-600 border border-green-200',
             'low_stock' => 'bg-yellow-50 text-yellow-600 border border-yellow-200',
             'out_of_stock' => 'bg-red-50 text-red-600 border border-red-200',
-            'unlimited' => 'bg-purple-50 text-purple-600 border border-purple-200',
-            default => 'bg-gray-50 text-gray-600 border border-gray-200'
-        };
+            'unlimited' => 'bg-purple-50 text-purple-600 border border-purple-200'
+        ];
+        
+        return $classes[$status] ?? 'bg-gray-50 text-gray-600 border border-gray-200';
     }
 }
