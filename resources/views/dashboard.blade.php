@@ -310,12 +310,6 @@
     <i class="fas fa-bars text-xl"></i>
 </button>
 
-<!-- Sidebar Overlay -->
-<div id="sidebarOverlay" 
-     class="sidebar-overlay" 
-     :class="{ 'active': sidebarOpen }" 
-     @click="sidebarOpen = false">
-</div>
 
 <!-- Sidebar -->    
 <x-asidebar />

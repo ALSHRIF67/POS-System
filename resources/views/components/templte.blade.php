@@ -485,33 +485,10 @@
         <p class="text-sm text-gray-500 mt-1">نظام إدارة المطعم</p>
     </div>
 
-    <!-- قائمة التنقل -->
-    <nav class="space-y-2">
-        @php
-            $menuItems = [
-                ['name' => 'لوحة التحكم', 'icon' => 'fa-chart-pie', 'route' => 'dashboard'],
-                ['name' => 'المبيعات', 'icon' => 'fa-chart-line', 'route' => 'sales'],
-                ['name' => 'الأصناف', 'icon' => 'fa-cubes', 'route' => 'products'],
-                ['name' => 'الموظفين', 'icon' => 'fa-users', 'route' => 'employees'],
-                ['name' => 'الفواتير', 'icon' => 'fa-file-invoice', 'route' => 'invoices'],
-                ['name' => 'التحليل اليومي', 'icon' => 'fa-calendar-alt', 'route' => 'daily-analysis'],
-            ];
-        @endphp
-        
-        @foreach($menuItems as $menu)
-        <a href="#" 
-           @click="setActiveMenu('{{ $menu['name'] }}')"
-           :class="{ 
-               'bg-gradient-to-r from-[#6C63FF]/20 to-[#C084FC]/20 text-[#6C63FF] border-r-4 border-[#6C63FF]': activeMenu === '{{ $menu['name'] }}', 
-               'text-gray-600 hover:bg-[#6C63FF]/10 hover:text-[#6C63FF]': activeMenu !== '{{ $menu['name'] }}' 
-           }"
-           class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium group">
-            <i class="fas {{ $menu['icon'] }} ml-3 text-lg group-hover:scale-110 transition-transform"></i>
-            <span>{{ $menu['name'] }}</span>
-        </a>
-        @endforeach
-    </nav>
+   
 
+<!-- Sidebar -->    
+<x-asidebar />
     <!-- معلومات المستخدم -->
     <div class="absolute bottom-8 right-8 left-8">
         <div class="border-t border-[#6C63FF]/20 pt-6">

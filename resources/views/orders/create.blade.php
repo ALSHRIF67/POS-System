@@ -1,20 +1,4 @@
-{{-- resources/views/orders/index.blade.php --}}
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>نقاط البيع - مطعم الأصيل</title>
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
+  <style>
         body {
             font-family: 'Cairo', sans-serif;
             background: #f3f4f6;
@@ -314,11 +298,8 @@
             z-index: 1;
         }
     </style>
-</head>
-<body class="p-4">
-
-<!-- Notification -->
-<div id="notification" class="notification"></div>
+    <!-- Sidebar -->    
+<x-templte/>
 
 <!-- Receipt Modal -->
 <div id="receiptModal" class="receipt-modal">
@@ -332,94 +313,6 @@
         <p class="text-gray-600">جاري حفظ الطلب...</p>
     </div>
 </div>
-
-<!-- Hamburger Button (only visible on mobile) -->
-<button id="hamburgerBtn" class="hamburger-btn" aria-label="Toggle menu">
-    <i class="fas fa-bars text-xl"></i>
-</button>
-
-<!-- Sidebar Overlay (mobile only) - FIXED: Now properly blocks/clicks -->
-<div id="sidebarOverlay" class="sidebar-overlay"></div>
-
-<!-- ================= SIDEBAR ================= -->
-<aside id="sidebar" class="sidebar w-72 bg-white/90 backdrop-blur-lg shadow-2xl p-8 overflow-y-auto border-l border-[#6C63FF]/10">
-    
-    <!-- Close Button (mobile only) -->
-    <button id="closeSidebarBtn" class="close-btn">
-        <i class="fas fa-times"></i>
-    </button>
-
-    <div class="mb-10">
-        <div class="flex items-center gap-2 mb-2">
-            <div class="w-10 h-10 bg-gradient-to-br from-[#6C63FF] to-[#C084FC] rounded-2xl flex items-center justify-center shadow-xl">
-                <i class="fas fa-utensils text-white text-lg"></i>
-            </div>
-            <h1 class="text-3xl font-bold">
-                <span class="bg-gradient-to-l from-[#6C63FF] to-[#FF6B6B] bg-clip-text text-transparent">Menu</span>
-                <span class="text-gray-800">Master</span>
-            </h1>
-        </div>
-        <p class="text-sm text-gray-500 mt-1">نظام إدارة المطعم</p>
-    </div>
-
-    <!-- قائمة التنقل -->
-    <nav class="space-y-2">
-        @php
-            $menuItems = [
-                ['name' => 'لوحة التحكم', 'icon' => 'fa-chart-pie'],
-                ['name' => 'المبيعات', 'icon' => 'fa-chart-line'],
-                ['name' => 'الأصناف', 'icon' => 'fa-cubes'],
-                ['name' => 'الموظفين', 'icon' => 'fa-users'],
-                ['name' => 'الفواتير', 'icon' => 'fa-file-invoice'],
-                ['name' => 'التحليل اليومي', 'icon' => 'fa-calendar-alt'],
-            ];
-        @endphp
-        
-        @foreach($menuItems as $menu)
-        <a href="#" 
-           class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium group text-gray-600 hover:bg-[#6C63FF]/10 hover:text-[#6C63FF]">
-            <i class="fas {{ $menu['icon'] }} ml-3 text-lg group-hover:scale-110 transition-transform"></i>
-            <span>{{ $menu['name'] }}</span>
-        </a>
-        @endforeach
-    </nav>
-
-    <!-- معلومات المستخدم -->
-    <div class="absolute bottom-8 right-8 left-8">
-        <div class="border-t border-[#6C63FF]/20 pt-6">
-            <div class="flex items-center space-x-3 space-x-reverse">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6C63FF] to-[#FF6B6B] flex items-center justify-center shadow-xl transform rotate-3 hover:rotate-0 transition-transform">
-                    <span class="text-white font-bold text-xl">
-                        {{ auth()->user()->name[0] ?? 'أ' }}
-                    </span>
-                </div>
-                <div>
-                    <p class="text-base font-bold text-gray-800">
-                        {{ auth()->user()->name ?? 'أحمد محمد' }}
-                    </p>
-                    <p class="text-sm text-[#6C63FF] flex items-center gap-1">
-                        <i class="fas fa-crown text-xs"></i>
-                        {{ auth()->user()->role === 'admin' ? 'مدير المطعم' : 'موظف' }}
-                    </p>
-                </div>
-            </div>
-            
-            <!-- أزرار سريعة -->
-            <div class="mt-4 grid grid-cols-3 gap-2">
-                <button class="p-2 rounded-xl bg-[#6C63FF]/10 text-[#6C63FF] hover:bg-[#6C63FF] hover:text-white transition-all text-center">
-                    <i class="fas fa-moon text-sm"></i>
-                </button>
-                <button class="p-2 rounded-xl bg-[#6C63FF]/10 text-[#6C63FF] hover:bg-[#6C63FF] hover:text-white transition-all text-center">
-                    <i class="fas fa-bell text-sm"></i>
-                </button>
-                <button class="p-2 rounded-xl bg-[#6C63FF]/10 text-[#6C63FF] hover:bg-[#6C63FF] hover:text-white transition-all text-center">
-                    <i class="fas fa-sign-out-alt text-sm"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</aside>
-
 <!-- Main Content (Scrollable) -->
 <main id="mainContent" class="main-content">
     <div class="flex flex-col lg:flex-row gap-4 p-4 min-h-full">
@@ -1069,7 +962,6 @@
         setTimeout(() => {
             notification.classList.remove('show');
         }, 3000);
-    }
+    
+}
 </script>
-</body>
-</html>
