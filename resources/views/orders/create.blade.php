@@ -1,304 +1,291 @@
-  <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: #f3f4f6;
-        }
-        
-        /* Touch-friendly styles */
-        .touch-button {
-            min-height: 60px;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        .touch-button:active {
-            transform: scale(0.98);
-        }
-        
-        /* Product card */
-        .product-card {
-            transition: all 0.2s;
-            border: 2px solid transparent;
-            user-select: none;
-            min-height: 160px;
-        }
-        
-        .product-card:active {
-            border-color: #6C63FF;
-            background: #f5f3ff;
-        }
-        
-        .product-card.out-of-stock {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-        
-        /* Quantity buttons */
-        .qty-btn {
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            font-size: 1.25rem;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        
-        .qty-btn:active {
-            transform: scale(0.9);
-        }
-        
-        /* Remove button */
-        .remove-btn {
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            color: #ef4444;
-            transition: all 0.2s;
-        }
-        
-        .remove-btn:active {
-            background: #fee2e2;
-        }
-        
-        /* Scrollbar */
-        .scrollbar-custom::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .scrollbar-custom::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        
-        .scrollbar-custom::-webkit-scrollbar-thumb {
-            background: #c7c7c7;
-            border-radius: 10px;
-        }
-        
-        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-            background: #a0a0a0;
-        }
-        
-        /* Notification */
-        .notification {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: white;
-            padding: 16px 24px;
-            border-radius: 50px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 1000;
-            transition: transform 0.3s;
-            border-right: 4px solid;
-        }
-        
-        .notification.show {
-            transform: translateX(-50%) translateY(0);
-        }
-        
-        .notification.success {
-            border-right-color: #10b981;
-        }
-        
-        .notification.error {
-            border-right-color: #ef4444;
-        }
-        
-        /* Receipt modal */
-        .receipt-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .receipt-modal.active {
-            display: flex;
-        }
-        
-        .receipt-content {
-            max-width: 400px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-        }
-        
-        /* Loading spinner */
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #6C63FF;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+<style>
+    body {
+        font-family: 'Cairo', sans-serif;
+        background: #f3f4f6;
+    }
+    
+    /* Touch-friendly styles */
+    .touch-button {
+        min-height: 60px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .touch-button:active {
+        transform: scale(0.98);
+    }
+    
+    /* Product card */
+    .product-card {
+        transition: all 0.2s;
+        border: 2px solid transparent;
+        user-select: none;
+        min-height: 160px;
+    }
+    
+    .product-card:active {
+        border-color: #6C63FF;
+        background: #f5f3ff;
+    }
+    
+    .product-card.out-of-stock {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+    
+    /* Quantity buttons */
+    .qty-btn {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.25rem;
+        font-weight: bold;
+        transition: all 0.2s;
+    }
+    
+    .qty-btn:active {
+        transform: scale(0.9);
+    }
+    
+    /* Remove button */
+    .remove-btn {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        color: #ef4444;
+        transition: all 0.2s;
+    }
+    
+    .remove-btn:active {
+        background: #fee2e2;
+    }
+    
+    /* Scrollbar */
+    .scrollbar-custom::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar-thumb {
+        background: #c7c7c7;
+        border-radius: 10px;
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+        background: #a0a0a0;
+    }
+    
+    /* Notification */
+    .notification {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: white;
+        padding: 16px 24px;
+        border-radius: 50px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 1000;
+        transition: transform 0.3s;
+        border-right: 4px solid;
+    }
+    
+    .notification.show {
+        transform: translateX(-50%) translateY(0);
+    }
+    
+    .notification.success {
+        border-right-color: #10b981;
+    }
+    
+    .notification.error {
+        border-right-color: #ef4444;
+    }
+    
+    /* Receipt modal */
+    .receipt-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .receipt-modal.active {
+        display: flex;
+    }
+    
+    .receipt-content {
+        max-width: 400px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+    }
+    
+    /* Loading spinner */
+    .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #6C63FF;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 
-        /* Sidebar styles - FIXED */
+    /* Sidebar styles - FIXED */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: -100%;
+        width: 280px;
+        background: white;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        z-index: 50;
+        overflow-y: auto;
+        transition: right 0.3s ease-in-out;
+    }
+
+    .sidebar.open {
+        right: 0;
+    }
+
+    @media (min-width: 1024px) {
         .sidebar {
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            right: -100%;
-            width: 280px;
-            background: white;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-            z-index: 50;
-            overflow-y: auto;
-            transition: right 0.3s ease-in-out;
-        }
-
-        .sidebar.open {
             right: 0;
         }
-
-        @media (min-width: 1024px) {
-            .sidebar {
-                right: 0;
-            }
-            
-            .main-content {
-                margin-right: 280px;
-                transition: margin-right 0.3s ease;
-            }
-            
-            /* Hide close button on desktop */
-            .sidebar .close-btn {
-                display: none;
-            }
-        }
-
-        /* Overlay - FIXED: Lower z-index to not block clicks completely */
-        .sidebar-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 45;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            pointer-events: none; /* Allow clicks to pass through when hidden */
-        }
-
-        .sidebar-overlay.active {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: auto; /* Block clicks only when active */
-        }
-
-        @media (min-width: 1024px) {
-            .sidebar-overlay {
-                display: none;
-            }
-        }
-
-        /* Hamburger button - only on mobile */
-        .hamburger-btn {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            width: 48px;
-            height: 48px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 46; /* Above overlay but below sidebar */
-            transition: all 0.2s;
-            border: 1px solid #e5e7eb;
-        }
-
-        .hamburger-btn:hover {
-            background: #6C63FF;
-            color: white;
-        }
-
-        .hamburger-btn:active {
-            transform: scale(0.95);
-        }
-
-        @media (min-width: 1024px) {
-            .hamburger-btn {
-                display: none;
-            }
-        }
-
-        /* Close button inside sidebar */
-        .sidebar .close-btn {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #f3f4f6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            z-index: 51;
-            border: none;
-        }
-
-        .sidebar .close-btn:hover {
-            background: #e5e7eb;
-        }
-
-        .sidebar .close-btn i {
-            color: #4b5563;
-            font-size: 1.1rem;
-        }
-
-        @media (min-width: 1024px) {
-            .sidebar .close-btn {
-                display: none;
-            }
-        }
-
-        /* Mobile body scroll lock */
-        body.sidebar-open {
-            overflow: hidden;
+        
+        .main-content {
+            margin-right: 280px;
+            transition: margin-right 0.3s ease;
         }
         
-        /* Main content scrolling */
-        .main-content {
-            height: 100vh;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+        .sidebar .close-btn {
+            display: none;
         }
+    }
 
-        /* Ensure product cards are clickable on mobile */
-        .product-card {
-            position: relative;
-            z-index: 1;
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 45;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        pointer-events: none;
+    }
+
+    .sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    @media (min-width: 1024px) {
+        .sidebar-overlay {
+            display: none;
         }
-    </style>
-    <!-- Sidebar -->    
+    }
+
+    .hamburger-btn {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        width: 48px;
+        height: 48px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 46;
+        transition: all 0.2s;
+        border: 1px solid #e5e7eb;
+    }
+
+    .hamburger-btn:hover {
+        background: #6C63FF;
+        color: white;
+    }
+
+    .hamburger-btn:active {
+        transform: scale(0.95);
+    }
+
+    @media (min-width: 1024px) {
+        .hamburger-btn {
+            display: none;
+        }
+    }
+
+    .sidebar .close-btn {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        z-index: 51;
+        border: none;
+    }
+
+    .sidebar .close-btn:hover {
+        background: #e5e7eb;
+    }
+
+    .sidebar .close-btn i {
+        color: #4b5563;
+        font-size: 1.1rem;
+    }
+
+    body.sidebar-open {
+        overflow: hidden;
+    }
+    
+    .main-content {
+        height: 100vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .product-card {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+
 <x-templte/>
 
 <!-- Receipt Modal -->
@@ -313,10 +300,11 @@
         <p class="text-gray-600">جاري حفظ الطلب...</p>
     </div>
 </div>
-<!-- Main Content (Scrollable) -->
+
+<!-- Main Content -->
 <main id="mainContent" class="main-content">
     <div class="flex flex-col lg:flex-row gap-4 p-4 min-h-full">
-        
+
         {{-- ========== PRODUCTS SECTION (60%) ========== --}}
         <div class="lg:w-3/5 bg-white rounded-2xl shadow-lg p-4 flex flex-col h-full overflow-hidden">
             <!-- Header -->
@@ -329,7 +317,7 @@
                     <span id="productCount">{{ count($products) }}</span> صنف متاح
                 </div>
             </div>
-            
+
             <!-- Search -->
             <div class="mb-4">
                 <div class="relative">
@@ -340,7 +328,7 @@
                            class="w-full pr-12 pl-4 py-4 border-2 border-gray-200 rounded-2xl focus:border-[#6C63FF] focus:outline-none text-lg">
                 </div>
             </div>
-            
+
             <!-- Categories -->
             <div class="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-custom">
                 <button class="category-btn active px-6 py-3 bg-[#6C63FF] text-white rounded-xl font-bold whitespace-nowrap touch-button" data-category="all">
@@ -356,8 +344,8 @@
                 </button>
                 @endforeach
             </div>
-            
-            <!-- Products Grid (Scrollable) -->
+
+            <!-- Products Grid -->
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto scrollbar-custom p-1 flex-1" id="productsGrid">
                 @foreach($products as $product)
                 <div class="product-card bg-gradient-to-br from-white to-gray-50 border-2 border-gray-100 rounded-2xl p-4 cursor-pointer touch-button hover:shadow-lg
@@ -369,19 +357,16 @@
                      data-stock="{{ $product->quantity }}"
                      data-track="{{ $product->track_inventory }}"
                      data-available="{{ (!$product->track_inventory || $product->quantity > 0) ? 'true' : 'false' }}">
-                    
-                    <!-- Product Icon -->
+
                     <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-[#6C63FF]/20 to-[#FF6B6B]/20 rounded-2xl flex items-center justify-center">
                         <i class="fas fa-utensils text-3xl text-[#6C63FF]"></i>
                     </div>
-                    
-                    <!-- Product Info -->
+
                     <h3 class="font-bold text-gray-800 text-center text-lg mb-1">{{ $product->name }}</h3>
                     <p class="text-[#6C63FF] font-bold text-center text-xl">
                         {{ number_format($product->price, 2) }} <span class="text-sm">ر.س</span>
                     </p>
-                    
-                    <!-- Stock Indicator -->
+
                     @if($product->track_inventory)
                         <div class="text-center mt-2">
                             <span class="inline-block px-3 py-1 text-xs rounded-full 
@@ -401,7 +386,7 @@
                 @endforeach
             </div>
         </div>
-        
+
         {{-- ========== ORDER SECTION (40%) ========== --}}
         <div class="lg:w-2/5 bg-white rounded-2xl shadow-lg flex flex-col h-full overflow-hidden">
             <!-- Header -->
@@ -412,8 +397,8 @@
                     <span class="bg-white text-[#6C63FF] text-sm px-3 py-1 rounded-full mr-auto" id="itemCount">0</span>
                 </h2>
             </div>
-            
-            <!-- Order Items Table (Scrollable) -->
+
+            <!-- Order Items Table -->
             <div class="flex-1 overflow-y-auto scrollbar-custom p-4" id="orderItemsContainer">
                 <table class="w-full">
                     <thead class="bg-gray-50 sticky top-0">
@@ -425,12 +410,9 @@
                             <th class="p-3 text-center"></th>
                         </tr>
                     </thead>
-                    <tbody id="orderItemsList">
-                        <!-- Order items will be dynamically added here -->
-                    </tbody>
+                    <tbody id="orderItemsList"></tbody>
                 </table>
-                
-                <!-- Empty State -->
+
                 <div id="emptyOrder" class="text-center py-12">
                     <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                         <i class="fas fa-shopping-basket text-4xl text-gray-400"></i>
@@ -439,16 +421,14 @@
                     <p class="text-gray-400">اضغط على الأصناف لإضافتها</p>
                 </div>
             </div>
-            
-            <!-- Order Summary (Fixed at bottom) -->
+
+            <!-- Order Summary -->
             <div class="border-t p-4 bg-gray-50">
-                <!-- Subtotal -->
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-gray-600">المجموع الفرعي:</span>
                     <span class="font-bold text-xl" id="subtotal">0.00 ر.س</span>
                 </div>
-                
-                <!-- Tax -->
+
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-gray-600">الضريبة (%):</span>
                     <div class="flex items-center gap-2">
@@ -466,8 +446,7 @@
                     <span>قيمة الضريبة:</span>
                     <span id="taxAmount">0.00 ر.س</span>
                 </div>
-                
-                <!-- Discount -->
+
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-gray-600">الخصم:</span>
                     <input type="number" 
@@ -477,19 +456,25 @@
                            step="0.5"
                            class="w-24 p-2 border-2 border-gray-200 rounded-lg text-left focus:border-[#6C63FF] focus:outline-none">
                 </div>
-                
-                <!-- Grand Total -->
+
                 <div class="flex justify-between items-center mb-4 pt-3 border-t-2 border-gray-200">
                     <span class="font-bold text-lg">الإجمالي النهائي:</span>
                     <span class="font-bold text-2xl text-[#6C63FF]" id="grandTotal">0.00 ر.س</span>
                 </div>
-                
+
                 <!-- Notes -->
                 <textarea id="orderNotes" 
                           placeholder="ملاحظات إضافية (اختياري)..."
                           class="w-full p-3 border-2 border-gray-200 rounded-xl mb-3 focus:border-[#6C63FF] focus:outline-none"
                           rows="2"></textarea>
-                
+
+                <!-- Order Type -->
+                <select id="orderType" class="w-full p-3 border-2 border-gray-200 rounded-xl mb-3 focus:border-[#6C63FF] focus:outline-none text-gray-700">
+                    <option value="dine_in" selected>داخل المطعم</option>
+                    <option value="takeaway">سفري</option>
+                    <option value="delivery">توصيل</option>
+                </select>
+
                 <!-- Payment Method -->
                 <div class="grid grid-cols-3 gap-2 mb-3">
                     <button class="payment-method-btn active bg-[#6C63FF] text-white p-3 rounded-xl font-bold touch-button" data-method="cash">
@@ -505,7 +490,7 @@
                         محفظة
                     </button>
                 </div>
-                
+
                 <!-- Action Buttons -->
                 <div class="grid grid-cols-2 gap-3">
                     <button onclick="printOrder()" 
@@ -897,7 +882,8 @@
             // Show receipt
             document.getElementById('receiptContent').innerHTML = result.receipt;
             document.getElementById('receiptModal').classList.add('active');
-            
+            // Automatically print
+printReceipt();
             // Clear order
             orderItems = [];
             renderOrderTable();

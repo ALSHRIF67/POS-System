@@ -136,6 +136,29 @@
                 <span>{{ number_format($order->discount, 2) }} ر.س</span>
             </div>
             @endif
+
+            <!-- Order Type -->
+            @if(!empty($order->order_type))
+            <div class="total-row">
+                <span>نوع الطلب:</span>
+                <span>
+                    @switch($order->order_type)
+                        @case('dine_in') داخل المطعم @break
+                        @case('takeaway') سفري @break
+                        @case('delivery') توصيل @break
+                        @default غير محدد
+                    @endswitch
+                </span>
+            </div>
+            @endif
+
+            <!-- Order Notes -->
+            @if(!empty($order->notes))
+            <div class="total-row">
+                <span>ملاحظات:</span>
+                <span>{{ $order->notes }}</span>
+            </div>
+            @endif
             
             <div class="total-row grand-total">
                 <span>الإجمالي النهائي:</span>

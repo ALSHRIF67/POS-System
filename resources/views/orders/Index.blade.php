@@ -120,12 +120,13 @@
                 </table>
             </div>
             
-            {{-- Pagination --}}
-            @if(isset($orders) && $orders->hasPages())
-            <div class="px-6 py-4 border-t border-gray-100">
-                {{ $orders->links() }}
-            </div>
-            @endif
+           
         </div>
+        {{-- Pagination --}}
+@if(isset($orders) && $orders->hasPages())
+    <div class="px-6 py-4 border-t border-gray-100 flex justify-center">
+        {{ $orders->links() }}
+    </div>
+@endif
     </div>
 </main>

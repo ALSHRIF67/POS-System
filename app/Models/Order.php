@@ -9,18 +9,19 @@ class Order extends Model
 {
     protected $table = 'orders';
     
-    protected $fillable = [
-        'order_number',        // Add this line
-        'subtotal',
-        'tax',
-        'discount',
-        'total',
-        'status',
-        'payment_status',
-        'payment_method',
-        'notes',
-        'user_id'
-    ];
+  protected $fillable = [
+    'order_number',
+    'subtotal',
+    'tax',
+    'discount',
+    'total',
+    'status',
+    'payment_status',
+    'payment_method',
+    'order_type',   // أضف هذا
+    'notes',
+    'user_id'
+];
 
     protected $casts = [
         'subtotal' => 'decimal:2',
