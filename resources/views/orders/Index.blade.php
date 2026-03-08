@@ -1,6 +1,7 @@
 <x-templte/>
 
 <!-- ================= MAIN CONTENT ================= -->
+<!-- ================= MAIN CONTENT ================= -->
 <main id="mainContent" class="main-content min-h-screen bg-[#f8fafc]">
     <div class="content-container">
         <!-- Page Header -->
@@ -9,37 +10,37 @@
             <p class="text-sm text-gray-500 mt-1">عرض وإدارة جميع الطلبات</p>
         </div>
 
-        <!-- Date Filter Section -->
-        <div class="date-filter">
+        <!-- Date Filter Section (as a GET form) -->
+        <form method="GET" action="{{ route('orders.index') }}" id="filterForm" class="date-filter">
             <div class="flex items-center gap-2 flex-1">
                 <i class="fas fa-calendar-alt text-[#6C63FF]"></i>
                 <span class="text-sm font-medium text-gray-700">من:</span>
-                <input type="text" 
+                <input type="date" 
+                       name="dateFrom" 
                        id="dateFrom" 
                        class="date-input" 
-                       placeholder="YYYY-MM-DD"
-                       value="{{ date('Y-m-d') }}">
+                       value="{{ $dateFrom ?? date('Y-m-d') }}">
             </div>
             <div class="flex items-center gap-2 flex-1">
                 <i class="fas fa-calendar-alt text-[#FF6B6B]"></i>
                 <span class="text-sm font-medium text-gray-700">إلى:</span>
-                <input type="text" 
+                <input type="date" 
+                       name="dateTo" 
                        id="dateTo" 
                        class="date-input" 
-                       placeholder="YYYY-MM-DD"
-                       value="{{ date('Y-m-d') }}">
+                       value="{{ $dateTo ?? date('Y-m-d') }}">
             </div>
             <div class="flex gap-2">
-                <button class="btn-primary" onclick="filterByDate()">
+                <button type="submit" class="btn-primary">
                     <i class="fas fa-search ml-2"></i>
                     بحث
                 </button>
-                <button class="btn-secondary" onclick="resetToToday()">
+                <button type="button" class="btn-secondary" onclick="resetToToday()">
                     <i class="fas fa-redo-alt ml-2"></i>
                     اليوم
                 </button>
             </div>
-        </div>
+        </form>
 
         {{-- ================= ORDER SUMMARY ================= --}}
         <div class="stats-grid mb-6">
@@ -51,7 +52,7 @@
                     <span class="text-xs font-medium text-green-500 bg-green-50 px-2 py-1 rounded-lg">+12%</span>
                 </div>
                 <p class="stat-label text-xs text-gray-500 mb-1">إجمالي الطلبات</p>
-                <p class="stat-value text-2xl lg:text-3xl font-bold text-gray-900">{{ $summary->total_orders ?? 0 }}</p>
+                <p class="stat-value text-2xl lg:text-3xl font-bold text-gray-900">{{ $summary->total_orders }}</p>
             </div>
             
             <div class="stat-card">
@@ -62,7 +63,7 @@
                     <span class="text-xs font-medium text-green-500 bg-green-50 px-2 py-1 rounded-lg">+8%</span>
                 </div>
                 <p class="stat-label text-xs text-gray-500 mb-1">إجمالي الأصناف المباعة</p>
-                <p class="stat-value text-2xl lg:text-3xl font-bold text-gray-900">{{ $summary->total_items_sold ?? 0 }}</p>
+                <p class="stat-value text-2xl lg:text-3xl font-bold text-gray-900">{{ $summary->total_items_sold }}</p>
             </div>
             
             <div class="stat-card">
@@ -73,13 +74,14 @@
                     <span class="text-xs font-medium text-green-500 bg-green-50 px-2 py-1 rounded-lg">+15%</span>
                 </div>
                 <p class="stat-label text-xs text-gray-500 mb-1">إجمالي الإيرادات</p>
-                <p class="stat-value text-2xl lg:text-3xl font-bold text-[#6C63FF]">{{ number_format($summary->total_money ?? 0, 2) }} ج.م</p>
+                <p class="stat-value text-2xl lg:text-3xl font-bold text-[#6C63FF]">{{ number_format($summary->total_money, 2) }} ج.م</p>
             </div>
         </div>
 
        {{-- ================= ORDER TABLE ================= --}}
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div class="responsive-table">
+            <!-- Add horizontal scroll wrapper -->
+            <div class="overflow-x-auto">
                 <table class="w-full text-right">
                     <thead class="bg-gray-100">
                         <tr>
@@ -91,7 +93,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @forelse($orders ?? [] as $order)
+                        @forelse($orders as $order)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 text-sm font-medium text-gray-800">{{ $order->order_number }}</td>
                             <td class="px-6 py-4 text-sm text-gray-700">{{ $order->items_count }}</td>
@@ -111,22 +113,64 @@
                         <tr>
                             <td colspan="5" class="py-12 text-center text-gray-500">
                                 <i class="fas fa-receipt text-4xl mb-3 text-gray-300"></i>
-                                <p class="text-lg">لا توجد طلبات حتى الآن</p>
-                                <p class="text-sm text-gray-400 mt-1">ستظهر الطلبات هنا عند إضافتها</p>
+                                <p class="text-lg">لا توجد طلبات في هذا النطاق</p>
+                                <p class="text-sm text-gray-400 mt-1">حاول تغيير تواريخ البحث</p>
                             </td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            
-           
         </div>
-        {{-- Pagination --}}
-@if(isset($orders) && $orders->hasPages())
-    <div class="px-6 py-4 border-t border-gray-100 flex justify-center">
-        {{ $orders->links() }}
-    </div>
-@endif
+
+        {{-- Pagination with query string preserved --}}
+        @if($orders->hasPages())
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-center">
+                {{ $orders->appends(request()->query())->links() }}
+            </div>
+        @endif
     </div>
 </main>
+
+<script>
+     // Existing resetToToday function
+    function resetToToday() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dateFrom').value = today;
+        document.getElementById('dateTo').value = today;
+        document.getElementById('filterForm').submit();
+    }
+
+    // Disable flatpickr on our date inputs (if flatpickr is loaded)
+    document.addEventListener('DOMContentLoaded', function() {
+        // Option A: Remove the class that triggers flatpickr
+        document.querySelectorAll('#dateFrom, #dateTo').forEach(el => {
+            el.classList.remove('date-input'); // remove the flatpickr trigger class
+        });
+
+        // Option B: If you need to keep the class but flatpickr is already initialized,
+        // you can destroy existing instances:
+        if (window.flatpickr) {
+            flatpickr.find('#dateFrom')?.destroy();
+            flatpickr.find('#dateTo')?.destroy();
+        }
+    });
+</script>
+
+<style>
+    /* Ensure the table wrapper scrolls horizontally on small screens */
+    .overflow-x-auto {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Optional: keep table cells from shrinking too much */
+    .overflow-x-auto table {
+        min-width: 800px; /* Adjust based on your content */
+    }
+
+    /* Ensure main content can scroll vertically (default browser behavior) */
+    .main-content {
+        overflow-y: auto;
+    }
+</style>

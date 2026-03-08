@@ -12,9 +12,17 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
-
-    public function index()
+  public function index(Request $request)
     {
+        // Get filter dates from request, default to today
+        $dateFrom = $request->input('dateFrom', date('Y-m-d'));
+        $dateTo   = $request->input('dateTo', date('Y-m-d'));
+
+        // Build inclusive datetime range
+        $from = $dateFrom . ' 00:00:00';
+        $to   = $dateTo . ' 23:59:59';
+
+        // Fetch orders with item count, filtered by date range
         $orders = DB::table('orders')
             ->select(
                 'id',
@@ -25,18 +33,35 @@ class OrderController extends Controller
                 'created_at',
                 DB::raw('(SELECT COUNT(*) FROM order_items WHERE order_id = orders.id) as items_count')
             )
+            ->whereBetween('created_at', [$from, $to])
             ->orderByDesc('created_at')
             ->paginate(12);
 
-        $summary = DB::table('orders')
+        // Summary stats within the same date range
+        $totalItemsSold = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereBetween('orders.created_at', [$from, $to])
+            ->sum('order_items.quantity');
+
+        $summaryData = DB::table('orders')
+            ->whereBetween('created_at', [$from, $to])
             ->selectRaw('
                 COUNT(*) as total_orders,
-                (SELECT IFNULL(SUM(quantity),0) FROM order_items) as total_items_sold,
-                IFNULL(SUM(total),0) as total_money
+                IFNULL(SUM(total), 0) as total_money
             ')
             ->first();
 
-        return view('orders.index', compact('orders','summary'));
+        $summary = (object) [
+            'total_orders'     => $summaryData->total_orders ?? 0,
+            'total_items_sold' => $totalItemsSold,
+            'total_money'      => $summaryData->total_money ?? 0,
+        ];
+
+        return view('orders.index', compact('orders', 'summary'))
+            ->with([
+                'dateFrom' => $dateFrom,
+                'dateTo'   => $dateTo,
+            ]);
     }
 
 
@@ -127,7 +152,8 @@ class OrderController extends Controller
                 'payment_method' => $data['payment_method'],
                 'order_type' => $data['order_type'] ?? 'local',
                 'notes' => $data['notes'] ?? null,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
+    'status' => 'completed', // ← هنا أضفنا status ليكون مكتمل تلقائياً
             ]);
 
 
