@@ -90,6 +90,7 @@
                             <th class="px-6 py-4 text-sm font-medium text-gray-500">الإجمالي</th>
                             <th class="px-6 py-4 text-sm font-medium text-gray-500">تاريخ الطلب</th>
                             <th class="px-6 py-4 text-sm font-medium text-gray-500">الحالة</th>
+                            <th class="px-6 py-4 text-sm font-medium text-gray-500">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -108,10 +109,41 @@
                                     {{ $order->status }}
                                 </span>
                             </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2 justify-start">
+                                    {{-- View Order --}}
+                                    <a href="{{ route('orders.show', $order->id) }}" 
+                                       class="inline-flex items-center justify-center p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition"
+                                       title="عرض الطلب">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    {{-- Edit Order --}}
+                                    <a href="{{ route('orders.edit', $order->id) }}" 
+                                       class="inline-flex items-center justify-center p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition"
+                                       title="تعديل الطلب">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    {{-- Delete Order --}}
+                                    <form action="{{ route('orders.destroy', $order->id) }}" 
+                                          method="POST" 
+                                          onsubmit="return confirm('هل أنت متأكد من حذف الطلب؟');"
+                                          class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="inline-flex items-center justify-center p-2 rounded-lg text-red-600 hover:bg-red-50 transition"
+                                                title="حذف الطلب">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="py-12 text-center text-gray-500">
+                            <td colspan="6" class="py-12 text-center text-gray-500">
                                 <i class="fas fa-receipt text-4xl mb-3 text-gray-300"></i>
                                 <p class="text-lg">لا توجد طلبات في هذا النطاق</p>
                                 <p class="text-sm text-gray-400 mt-1">حاول تغيير تواريخ البحث</p>
@@ -166,7 +198,7 @@
 
     /* Optional: keep table cells from shrinking too much */
     .overflow-x-auto table {
-        min-width: 800px; /* Adjust based on your content */
+        min-width: 900px; /* Adjusted to accommodate new column */
     }
 
     /* Ensure main content can scroll vertically (default browser behavior) */

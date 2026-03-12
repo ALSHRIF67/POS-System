@@ -35,10 +35,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('menu-items', MenuItemController::class)->except(['create', 'edit']);
     Route::get('/menu-stats', [MenuItemController::class, 'getStats'])->name('menu.stats');
 
-    // Orders
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
-    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+ // Orders
+Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
+Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+
+// ✅ Fixed: separate URIs for show and edit
+Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+Route::get('/orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
+
+Route::put('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');;
 });
 
 require __DIR__.'/auth.php';

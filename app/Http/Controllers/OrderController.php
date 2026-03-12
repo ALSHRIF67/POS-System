@@ -12,17 +12,15 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
-  public function index(Request $request)
+
+    public function index(Request $request)
     {
-        // Get filter dates from request, default to today
         $dateFrom = $request->input('dateFrom', date('Y-m-d'));
         $dateTo   = $request->input('dateTo', date('Y-m-d'));
 
-        // Build inclusive datetime range
         $from = $dateFrom . ' 00:00:00';
         $to   = $dateTo . ' 23:59:59';
 
-        // Fetch orders with item count, filtered by date range
         $orders = DB::table('orders')
             ->select(
                 'id',
@@ -37,7 +35,6 @@ class OrderController extends Controller
             ->orderByDesc('created_at')
             ->paginate(12);
 
-        // Summary stats within the same date range
         $totalItemsSold = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->whereBetween('orders.created_at', [$from, $to])
@@ -69,11 +66,11 @@ class OrderController extends Controller
     {
         $products = MenuItem::where(function ($q) {
             $q->where('track_inventory', false)
-              ->orWhere('quantity','>',0);
+                ->orWhere('quantity', '>', 0);
         })
-        ->orderBy('category')
-        ->orderBy('name')
-        ->get();
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get();
 
         return view('orders.create', compact('products'));
     }
@@ -107,12 +104,12 @@ class OrderController extends Controller
 
                 $product = MenuItem::lockForUpdate()->find($item['product_id']);
 
-                if(!$product){
+                if (!$product) {
                     throw new \Exception("Product not found");
                 }
 
-                if($product->track_inventory && $product->quantity < $item['quantity']){
-                    throw new \Exception("Insufficient stock for ".$product->name);
+                if ($product->track_inventory && $product->quantity < $item['quantity']) {
+                    throw new \Exception("Insufficient stock for " . $product->name);
                 }
 
                 $itemTotal = $product->price * $item['quantity'];
@@ -127,21 +124,18 @@ class OrderController extends Controller
                     'total' => $itemTotal
                 ];
 
-                if($product->track_inventory){
-                    $product->decrement('quantity',$item['quantity']);
+                if ($product->track_inventory) {
+                    $product->decrement('quantity', $item['quantity']);
                 }
             }
-
 
             $taxPercent = $data['tax'] ?? 0;
             $discount = $data['discount'] ?? 0;
 
-            $taxAmount = $subtotal * ($taxPercent/100);
+            $taxAmount = $subtotal * ($taxPercent / 100);
             $total = $subtotal + $taxAmount - $discount;
 
-
             $orderNumber = $this->generateOrderNumber();
-
 
             $order = Order::create([
                 'order_number' => $orderNumber,
@@ -153,121 +147,235 @@ class OrderController extends Controller
                 'order_type' => $data['order_type'] ?? 'local',
                 'notes' => $data['notes'] ?? null,
                 'user_id' => Auth::id(),
-    'status' => 'completed', // ← هنا أضفنا status ليكون مكتمل تلقائياً
+                'status' => 'completed',
             ]);
 
-
-            foreach($items as $item){
+            foreach ($items as $item) {
                 $item['order_id'] = $order->id;
                 OrderItem::create($item);
             }
 
-
             DB::commit();
 
-
-            $receipt = $this->generateReceipt($order);
-
+            $receipt = view('orders.receipt', compact('order'))->render();
 
             return response()->json([
-                'success'=>true,
-                'message'=>'Order created successfully',
-                'order'=>$order->load('items'),
-                'receipt'=>$receipt
+                'success' => true,
+                'message' => 'Order created successfully',
+                'order' => $order->load('items'),
+                'receipt' => $receipt
             ]);
-
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
 
             DB::rollBack();
 
-            Log::error('Order Error: '.$e->getMessage());
+            Log::error('Order Error: ' . $e->getMessage());
 
             return response()->json([
-                'success'=>false,
-                'message'=>$e->getMessage()
-            ],500);
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
 
-
-    private function generateOrderNumber()
+    /**
+     * Display the specified order.
+     */
+    public function show($id)
     {
-        $date = now()->format('Ymd');
-
-        $lastOrder = Order::whereDate('created_at',today())
-            ->orderByDesc('id')
-            ->first();
-
-        $number = 1;
-
-        if($lastOrder){
-            $last = intval(substr($lastOrder->order_number,-4));
-            $number = $last + 1;
-        }
-
-        return "ORD-".$date."-".str_pad($number,4,'0',STR_PAD_LEFT);
+        $order = Order::with('items')->findOrFail($id);
+        return view('orders.show', compact('order'));
     }
 
 
-
-    private function generateReceipt($order)
+    /**
+     * Show the form for editing the specified order.
+     */
+    public function edit($id)
     {
-        $order->load('items','user');
+        $order = Order::with('items')->findOrFail($id);
+        $products = MenuItem::orderBy('category')->orderBy('name')->get();
+        return view('orders.edit', compact('order', 'products'));
+    }
 
-        $receipt = [];
 
-        $receipt[] = "==============================";
-        $receipt[] = "        RESTAURANT POS";
-        $receipt[] = "==============================";
-        $receipt[] = "Order: ".$order->order_number;
-        $receipt[] = "Date: ".$order->created_at->format('Y-m-d H:i');
-        $receipt[] = "Cashier: ".($order->user->name ?? '---');
-        $receipt[] = "------------------------------";
+    /**
+     * Update the specified order in storage.
+     */
+   public function update(Request $request, $id)
+{
+    try {
+        $data = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:menu_items,id',
+            'items.*.quantity' => 'required|integer|min:1',
 
-        foreach($order->items as $item){
+            'tax' => 'nullable|numeric|min:0|max:100',
+            'discount' => 'nullable|numeric|min:0',
 
-            $name = substr($item->product_name,0,15);
+            'payment_method' => 'required|in:cash,card,wallet',
+            'order_type' => 'nullable|in:local,takeaway,delivery',
 
-            $line =
-                str_pad($name,16).
-                str_pad($item->quantity,4," ",STR_PAD_LEFT).
-                str_pad(number_format($item->price,2),8," ",STR_PAD_LEFT);
+            'notes' => 'nullable|string|max:500',
+            'status' => 'nullable|in:pending,completed,cancelled'
+        ]);
 
-            $receipt[] = $line;
+        DB::beginTransaction();
+
+        $order = Order::with('items')->findOrFail($id);
+
+        // Return previous quantities to stock
+        foreach ($order->items as $oldItem) {
+            $product = MenuItem::find($oldItem->product_id);
+            if ($product && $product->track_inventory) {
+                $product->increment('quantity', $oldItem->quantity);
+            }
         }
 
-        $receipt[] = "------------------------------";
-        $receipt[] = "Subtotal: ".number_format($order->subtotal,2);
-        $receipt[] = "Tax: ".number_format($order->tax,2);
-        $receipt[] = "Discount: ".number_format($order->discount,2);
-        $receipt[] = "TOTAL: ".number_format($order->total,2);
-        $receipt[] = "==============================";
-        $receipt[] = "      Thank you for visiting";
+        // Delete old items
+        OrderItem::where('order_id', $order->id)->delete();
 
-        return implode("\n",$receipt);
+        // Process new items
+        $subtotal = 0;
+        $newItems = [];
+
+        foreach ($data['items'] as $itemData) {
+            $product = MenuItem::lockForUpdate()->find($itemData['product_id']);
+
+            if (!$product) {
+                throw new \Exception("Product not found");
+            }
+
+            if ($product->track_inventory && $product->quantity < $itemData['quantity']) {
+                throw new \Exception("Insufficient stock for " . $product->name);
+            }
+
+            $itemTotal = $product->price * $itemData['quantity'];
+            $subtotal += $itemTotal;
+
+            $newItems[] = [
+                'order_id'     => $order->id,
+                'product_id'   => $product->id,
+                'product_name' => $product->name,
+                'price'        => $product->price,
+                'quantity'     => $itemData['quantity'],
+                'total'        => $itemTotal,
+                'created_at'   => now(),
+                'updated_at'   => now(),
+            ];
+
+            if ($product->track_inventory) {
+                $product->decrement('quantity', $itemData['quantity']);
+            }
+        }
+
+        OrderItem::insert($newItems);
+
+        $taxPercent = $data['tax'] ?? 0;
+        $discount = $data['discount'] ?? 0;
+        $taxAmount = $subtotal * ($taxPercent / 100);
+        $total = $subtotal + $taxAmount - $discount;
+
+        $order->update([
+            'subtotal'       => $subtotal,
+            'tax'            => $taxAmount,
+            'discount'       => $discount,
+            'total'          => $total,
+            'payment_method' => $data['payment_method'],
+            'order_type'     => $data['order_type'] ?? $order->order_type,
+            'notes'          => $data['notes'] ?? $order->notes,
+            'status'         => $data['status'] ?? $order->status,
+        ]);
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تحديث الطلب بنجاح',
+            'order'   => $order->fresh('items')
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Order Update Error: ' . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+    /**
+     * Remove the specified order from storage.
+     */
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $order = Order::findOrFail($id);
+
+            // Return quantities to stock if tracking inventory
+            foreach ($order->items as $item) {
+                $product = MenuItem::find($item->product_id);
+                if ($product && $product->track_inventory) {
+                    $product->increment('quantity', $item->quantity);
+                }
+            }
+
+            $order->delete();
+
+            DB::commit();
+
+            return redirect()->route('orders.index')
+                ->with('success', 'تم حذف الطلب بنجاح');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Order Delete Error: ' . $e->getMessage());
+            return back()->with('error', 'حدث خطأ أثناء حذف الطلب');
+        }
     }
 
 
     public function filterByDate(Request $request)
     {
         $data = $request->validate([
-            'from'=>'required|date',
-            'to'=>'required|date'
+            'from' => 'required|date',
+            'to' => 'required|date'
         ]);
 
         $orders = Order::withCount('items')
-            ->whereBetween('created_at',[
-                $data['from'].' 00:00:00',
-                $data['to'].' 23:59:59'
+            ->whereBetween('created_at', [
+                $data['from'] . ' 00:00:00',
+                $data['to'] . ' 23:59:59'
             ])
             ->orderByDesc('created_at')
             ->get();
 
         return response()->json([
-            'success'=>true,
-            'orders'=>$orders
+            'success' => true,
+            'orders' => $orders
         ]);
     }
 
+
+    private function generateOrderNumber()
+    {
+        $date = now()->format('Ymd');
+
+        $lastOrder = Order::whereDate('created_at', today())
+            ->orderByDesc('id')
+            ->first();
+
+        $number = 1;
+
+        if ($lastOrder) {
+            $last = intval(substr($lastOrder->order_number, -4));
+            $number = $last + 1;
+        }
+
+        return "ORD-" . $date . "-" . str_pad($number, 4, '0', STR_PAD_LEFT);
+    }
 }
