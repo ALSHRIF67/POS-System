@@ -378,4 +378,56 @@ class OrderController extends Controller
 
         return "ORD-" . $date . "-" . str_pad($number, 4, '0', STR_PAD_LEFT);
     }
+
+      public function dailyReport(Request $request)
+    {
+        $date = $request->input('date', date('Y-m-d'));
+        $from = $date . ' 00:00:00';
+        $to   = $date . ' 23:59:59';
+
+        // 1. Get orders for the selected day (with items count)
+        $orders = DB::table('orders')
+            ->select(
+                'id',
+                'order_number',
+                'total',
+                'status',
+                'payment_method',
+                'created_at',
+                DB::raw('(SELECT COUNT(*) FROM order_items WHERE order_id = orders.id) as items_count')
+            )
+            ->whereBetween('created_at', [$from, $to])
+            ->orderByDesc('created_at')
+            ->get();
+
+        // 2. Calculate summary data
+        $summaryData = DB::table('orders')
+            ->whereBetween('created_at', [$from, $to])
+            ->selectRaw('
+                COUNT(*) as total_orders,
+                IFNULL(SUM(total), 0) as total_money,
+                IFNULL(SUM(CASE WHEN payment_method = "cash" THEN total ELSE 0 END), 0) as cash_total,
+                IFNULL(SUM(CASE WHEN payment_method = "card" THEN total ELSE 0 END), 0) as card_total,
+                IFNULL(SUM(CASE WHEN payment_method = "wallet" THEN total ELSE 0 END), 0) as wallet_total
+            ')
+            ->first();
+
+        // 3. Total items sold (sum of quantities)
+        $totalItemsSold = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereBetween('orders.created_at', [$from, $to])
+            ->sum('order_items.quantity');
+
+        // 4. Build summary object
+        $summary = (object) [
+            'total_orders'     => $summaryData->total_orders ?? 0,
+            'total_items_sold' => $totalItemsSold,
+            'total_money'      => $summaryData->total_money ?? 0,
+            'cash_total'       => $summaryData->cash_total ?? 0,
+            'card_total'       => $summaryData->card_total ?? 0,
+            'wallet_total'     => $summaryData->wallet_total ?? 0,
+        ];
+
+        return view('orders.dailyreport', compact('orders', 'summary', 'date'));
+    }
 }

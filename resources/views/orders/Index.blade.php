@@ -1,7 +1,6 @@
 <x-templte/>
 
 <!-- ================= MAIN CONTENT ================= -->
-<!-- ================= MAIN CONTENT ================= -->
 <main id="mainContent" class="main-content min-h-screen bg-[#f8fafc]">
     <div class="content-container">
         <!-- Page Header -->
@@ -78,6 +77,78 @@
             </div>
         </div>
 
+        {{-- ========== NEW: DAILY REVENUE REPORT SECTION ========== --}}
+        <div class="daily-revenue-report mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-3">تقرير الإيراد اليومي</h3>
+            
+            <!-- Form to select a single date, preserving all existing query parameters -->
+            <form method="GET" action="{{ route('orders.index') }}" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-4">
+                <div class="flex flex-wrap items-end gap-4">
+                    <div class="flex-1 min-w-[200px]">
+                        <label for="reportDate" class="block text-sm font-medium text-gray-700 mb-1">اختر التاريخ</label>
+                        <input type="date" 
+                               name="reportDate" 
+                               id="reportDate" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6C63FF] focus:border-transparent"
+                               value="{{ request('reportDate') }}">
+                    </div>
+                    
+                    <!-- Preserve all existing query parameters except 'reportDate' -->
+                    @foreach(request()->except('reportDate') as $key => $value)
+                        @if(is_array($value))
+                            @foreach($value as $arrayValue)
+                                <input type="hidden" name="{{ $key }}[]" value="{{ $arrayValue }}">
+                            @endforeach
+                        @else
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endif
+                    @endforeach
+                    
+                    <div>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-[#6C63FF] text-white rounded-xl hover:bg-[#5a52d5] transition-colors duration-200 flex items-center gap-2">
+                            <i class="fas fa-chart-line"></i>
+                            عرض التقرير
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Display the daily report only when a date is selected and data exists -->
+            @if(request('reportDate') && isset($dailyReport))
+                <div class="mt-4 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-semibold text-gray-800">تقرير يوم {{ \Carbon\Carbon::parse(request('reportDate'))->format('Y/m/d') }}</h4>
+                        <span class="bg-[#6C63FF] bg-opacity-10 text-[#6C63FF] px-3 py-1 rounded-full text-sm">
+                            <i class="fas fa-calendar-day ml-1"></i>
+                            تقرير مفصل
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Total Orders -->
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center">
+                            <div class="text-3xl font-bold text-blue-600 mb-1">{{ $dailyReport->total_orders }}</div>
+                            <div class="text-sm text-gray-600">عدد الطلبات</div>
+                        </div>
+                        
+                        <!-- Total Items Sold -->
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center">
+                            <div class="text-3xl font-bold text-green-600 mb-1">{{ $dailyReport->total_items_sold }}</div>
+                            <div class="text-sm text-gray-600">إجمالي الأصناف</div>
+                        </div>
+                        
+                        <!-- Total Revenue -->
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center">
+                            <div class="text-3xl font-bold text-[#6C63FF] mb-1">{{ number_format($dailyReport->total_money, 2) }} ج.م</div>
+                            <div class="text-sm text-gray-600">الإيرادات</div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+        {{-- ========== END DAILY REVENUE REPORT SECTION ========== --}}
+
        {{-- ================= ORDER TABLE ================= --}}
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <!-- Add horizontal scroll wrapper -->
@@ -132,11 +203,7 @@
                                           class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" 
-                                                class="inline-flex items-center justify-center p-2 rounded-lg text-red-600 hover:bg-red-50 transition"
-                                                title="حذف الطلب">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                     
                                     </form>
                                 </div>
                             </td>
