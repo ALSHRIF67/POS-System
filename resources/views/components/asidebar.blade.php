@@ -29,6 +29,7 @@ $menuItems = [
     ['name' => 'إدارة القائمة', 'icon' => 'fa-cubes', 'route' => 'menu.management'], 
     ['name' => 'الطلبات', 'icon' => 'fa-utensils', 'route' => 'orders.create'],
     ['name' => 'المبيعات', 'icon' => 'fa-chart-line', 'route' => 'orders.index'],
+    ['name' => 'الموظفون', 'icon' => 'fa-users', 'route' => 'employees.index'], // Added Employee
 ];
 @endphp
 

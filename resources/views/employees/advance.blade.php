@@ -1,0 +1,105 @@
+<x-templte/>
+
+<!-- ================= MAIN CONTENT ================= -->
+<main id="mainContent" class="main-content min-h-screen bg-[#f8fafc]">
+    <div class="content-container">
+        <!-- Page Header with Back Button -->
+        <div class="page-header mb-4 flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-hand-holding-usd text-yellow-500"></i>
+                    تسجيل سلفة للموظف
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">الموظف: {{ $employee->name }}</p>
+            </div>
+            <a href="{{ route('employees.show', $employee) }}" class="text-sm text-gray-500 hover:text-[#6C63FF] transition flex items-center gap-1">
+                <i class="fas fa-arrow-right"></i>
+                العودة إلى ملف الموظف
+            </a>
+        </div>
+
+        <!-- Advance Form -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 max-w-2xl mx-auto">
+            <form method="POST" action="{{ route('employees.advance.store', $employee) }}">
+                @csrf
+
+                <!-- Employee Info Summary -->
+                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-yellow-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">{{ $employee->role }}</p>
+                            <p class="font-bold text-gray-800">{{ $employee->name }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amount -->
+                <div class="mb-6">
+                    <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">
+                        المبلغ <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">ج.م</span>
+                        <input type="number" 
+                               id="amount" 
+                               name="amount" 
+                               value="{{ old('amount') }}"
+                               step="0.01"
+                               min="0.01"
+                               class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#6C63FF] focus:outline-none @error('amount') border-red-500 @enderror"
+                               placeholder="0.00"
+                               required>
+                    </div>
+                    @error('amount')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-6">
+                    <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+                        ملاحظات
+                    </label>
+                    <textarea id="notes" 
+                              name="notes" 
+                              rows="3"
+                              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#6C63FF] focus:outline-none @error('notes') border-red-500 @enderror"
+                              placeholder="أي ملاحظات إضافية (اختياري)">{{ old('notes') }}</textarea>
+                    @error('notes')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end gap-3">
+                    <a href="{{ route('employees.show', $employee) }}" 
+                       class="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition touch-button">
+                        إلغاء
+                    </a>
+                    <button type="submit" 
+                            class="px-6 py-3 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600 transition touch-button">
+                        <i class="fas fa-save ml-2"></i>
+                        تسجيل السلفة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<style>
+    .touch-button {
+        min-height: 44px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .touch-button:active {
+        transform: scale(0.98);
+    }
+    .main-content {
+        overflow-y: auto;
+    }
+</style>

@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\EmployeeController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +49,18 @@ Route::get('/orders/{order}/edit', [OrderController::class, 'edit'])->name('orde
 Route::put('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
 Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 Route::get('/reports/daily', [OrderController::class, 'dailyReport'])->name('reports.daily');
+
+
+Route::resource('employees', EmployeeController::class);
+
+// Extra routes for payments and advances
+Route::get('/employees/{employee}/payment', [EmployeeController::class, 'createPayment'])->name('employees.payment.create');
+Route::post('/employees/{employee}/payment', [EmployeeController::class, 'storePayment'])->name('employees.payment.store');
+Route::get('/employees/{employee}/advance', [EmployeeController::class, 'createAdvance'])->name('employees.advance.create');
+Route::post('/employees/{employee}/advance', [EmployeeController::class, 'storeAdvance'])->name('employees.advance.store');
+
+// Salary report route – THIS IS THE MISSING ONE
+Route::get('/employees/report/salary', [EmployeeController::class, 'salaryReport'])->name('employees.report.salary');
 
 });
 
