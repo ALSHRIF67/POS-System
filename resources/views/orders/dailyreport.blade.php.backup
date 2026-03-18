@@ -1,0 +1,454 @@
+<x-templte/>
+
+<style>
+    body {
+        font-family: 'Cairo', sans-serif;
+        background: #f3f4f6;
+    }
+    
+    /* Touch-friendly styles */
+    .touch-button {
+        min-height: 60px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .touch-button:active {
+        transform: scale(0.98);
+    }
+    
+    /* Scrollbar */
+    .scrollbar-custom::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar-thumb {
+        background: #c7c7c7;
+        border-radius: 10px;
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+        background: #a0a0a0;
+    }
+    
+    /* Notification */
+    .notification {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: white;
+        padding: 16px 24px;
+        border-radius: 50px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 1000;
+        transition: transform 0.3s;
+        border-right: 4px solid;
+    }
+    
+    .notification.show {
+        transform: translateX(-50%) translateY(0);
+    }
+    
+    .notification.success {
+        border-right-color: #10b981;
+    }
+    
+    .notification.error {
+        border-right-color: #ef4444;
+    }
+    
+    /* Loading spinner */
+    .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #6C63FF;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Sidebar styles */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: -100%;
+        width: 280px;
+        background: white;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        z-index: 50;
+        overflow-y: auto;
+        transition: right 0.3s ease-in-out;
+    }
+
+    .sidebar.open {
+        right: 0;
+    }
+
+    @media (min-width: 1024px) {
+        .sidebar {
+            right: 0;
+        }
+        
+        .main-content {
+            margin-right: 280px;
+            transition: margin-right 0.3s ease;
+        }
+        
+        .sidebar .close-btn {
+            display: none;
+        }
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 45;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        pointer-events: none;
+    }
+
+    .sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    @media (min-width: 1024px) {
+        .sidebar-overlay {
+            display: none;
+        }
+    }
+
+    .hamburger-btn {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        width: 48px;
+        height: 48px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 46;
+        transition: all 0.2s;
+        border: 1px solid #e5e7eb;
+    }
+
+    .hamburger-btn:hover {
+        background: #6C63FF;
+        color: white;
+    }
+
+    .hamburger-btn:active {
+        transform: scale(0.95);
+    }
+
+    @media (min-width: 1024px) {
+        .hamburger-btn {
+            display: none;
+        }
+    }
+
+    .sidebar .close-btn {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        z-index: 51;
+        border: none;
+    }
+
+    .sidebar .close-btn:hover {
+        background: #e5e7eb;
+    }
+
+    .sidebar .close-btn i {
+        color: #4b5563;
+        font-size: 1.1rem;
+    }
+
+    body.sidebar-open {
+        overflow: hidden;
+    }
+    
+    .main-content {
+        height: 100vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+</style>
+
+<!-- Sidebar (same as original, you can include your existing sidebar here if needed) -->
+<!-- For brevity, we'll assume the sidebar is included via layout; if not, include it similarly to the edit page -->
+@include('partials.sidebar') {{-- Adjust according to your actual sidebar partial --}}
+
+<!-- Hamburger Button -->
+<div id="hamburgerBtn" class="hamburger-btn lg:hidden">
+    <i class="fas fa-bars text-2xl"></i>
+</div>
+
+<!-- Sidebar Overlay -->
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<!-- Main Content -->
+<main id="mainContent" class="main-content">
+    <div class="p-4 md:p-6 lg:p-8">
+        <!-- Page Header -->
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                <i class="fas fa-chart-line text-[#6C63FF]"></i>
+                Daily Sales Report
+            </h1>
+            <a href="{{ route('orders.index') }}" class="text-sm text-gray-500 hover:text-[#6C63FF] transition flex items-center gap-1">
+                <i class="fas fa-arrow-right"></i>
+                العودة
+            </a>
+        </div>
+
+        <!-- Date Filter Form -->
+        <form method="GET" action="{{ route('reports.daily') }}" class="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-8">
+            <div class="flex flex-col md:flex-row items-end gap-4">
+                <div class="flex-1">
+                    <label for="date" class="block text-sm font-medium text-gray-700 mb-2">اختر التاريخ</label>
+                    <input type="date" 
+                           name="date" 
+                           id="date" 
+                           value="{{ $date }}" 
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#6C63FF] focus:outline-none text-lg">
+                </div>
+                <button type="submit" 
+                        class="w-full md:w-auto px-8 py-3 bg-[#6C63FF] text-white rounded-xl font-bold hover:bg-[#5a52d5] transition-all touch-button flex items-center justify-center gap-2">
+                    <i class="fas fa-calendar-alt"></i>
+                    عرض التقرير
+                </button>
+            </div>
+        </form>
+
+        <!-- Summary Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <!-- Total Orders -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-r-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 uppercase">إجمالي الطلبات</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ $summary->total_orders }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-shopping-cart text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Revenue -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-r-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 uppercase">إجمالي الإيرادات</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ number_format($summary->total_money, 2) }} ر.س</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Items Sold -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-r-4 border-purple-500">
+                <div class="flex items-center justify-between">
+                   
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-cubes text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cash Payments -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-r-4 border-yellow-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 uppercase">نقدي</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ number_format($summary->cash_total, 2) }} ر.س</p>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-wallet text-yellow-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Payments -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-r-4 border-indigo-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 uppercase">بطاقة</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ number_format($summary->card_total, 2) }} ر.س</p>
+                    </div>
+                    <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-credit-card text-indigo-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wallet Payments -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-r-4 border-pink-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 uppercase">محفظة</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ number_format($summary->wallet_total, 2) }} ر.س</p>
+                    </div>
+                    <div class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-mobile-alt text-pink-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-list text-[#6C63FF]"></i>
+                    تفاصيل الطلبات
+                </h2>
+            </div>
+            <div class="overflow-x-auto scrollbar-custom">
+                <table class="w-full text-right">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-6 py-4 text-sm font-medium text-gray-500">رقم الطلب</th>
+                            <th class="px-6 py-4 text-sm font-medium text-gray-500">عدد الأصناف</th>
+                            <th class="px-6 py-4 text-sm font-medium text-gray-500">الإجمالي</th>
+                            <th class="px-6 py-4 text-sm font-medium text-gray-500">طريقة الدفع</th>
+                            <th class="px-6 py-4 text-sm font-medium text-gray-500">الحالة</th>
+                            <th class="px-6 py-4 text-sm font-medium text-gray-500">تاريخ الطلب</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($orders as $order)
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-800">{{ $order->order_number }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ $order->items_count }}</td>
+                            <td class="px-6 py-4 text-sm font-semibold text-[#6C63FF]">{{ number_format($order->total, 2) }} ر.س</td>
+                            <td class="px-6 py-4 text-sm text-gray-700 capitalize">{{ $order->payment_method }}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1.5 text-xs rounded-xl font-medium 
+                                    @if($order->status === 'completed') bg-green-100 text-green-600
+                                    @elseif($order->status === 'pending') bg-yellow-100 text-yellow-600
+                                    @else bg-red-100 text-red-600
+                                    @endif">
+                                    {{ $order->status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ \Carbon\Carbon::parse($order->created_at)->format('Y-m-d H:i') }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="py-12 text-center text-gray-500">
+                                <i class="fas fa-receipt text-4xl mb-3 text-gray-300"></i>
+                                <p class="text-lg">لا توجد طلبات في هذا التاريخ</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Include the same sidebar and mobile menu JavaScript from the edit page -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sidebar logic
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+        const body = document.body;
+        
+        if (sidebar) {
+            function openSidebar() {
+                sidebar.classList.add('open');
+                if (overlay) overlay.classList.add('active');
+                body.classList.add('sidebar-open');
+            }
+            
+            function closeSidebar() {
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+                body.classList.remove('sidebar-open');
+            }
+            
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openSidebar();
+                });
+            }
+            
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeSidebar();
+                });
+            }
+            
+            if (overlay) {
+                overlay.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeSidebar();
+                });
+            }
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                    closeSidebar();
+                }
+            });
+            
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024) {
+                    sidebar.classList.add('open');
+                    if (overlay) overlay.classList.remove('active');
+                    body.classList.remove('sidebar-open');
+                } else {
+                    sidebar.classList.remove('open');
+                    if (overlay) overlay.classList.remove('active');
+                    body.classList.remove('sidebar-open');
+                }
+            });
+
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.add('open');
+            }
+        }
+    });
+</script>
