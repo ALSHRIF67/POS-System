@@ -117,3 +117,28 @@ Open a Pull Request describing your changes.
 License
 
 This project is open-source and available under the MIT License.
+
+# 🍽️ Restaurant POS System
+
+## Overview
+This is a Point of Sale (POS) system designed for a restaurant to manage menu items, orders, and sales efficiently. The system allows staff to manage categories, menu items, take orders, print bills, and track sales in real-time.
+
+---
+
+## Screenshots
+
+### Dashboard
+![Dashboard](public/images/1.jpeg)
+
+### Menu Management
+![Menu](public/images/2.jpeg)
+
+### Order Management
+![Orders](public/images/2.jpeg)
+
+### Sales Management
+![Sales](public/images/3.jpeg)
+
+### employee
+![employee](public/images/4.jpeg)
+
