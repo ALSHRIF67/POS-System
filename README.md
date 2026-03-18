@@ -1,59 +1,119 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+Restaurant POS System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Overview
 
-## About Laravel
+This is a Point of Sale (POS) system designed for a restaurant to manage menu items, orders, and sales efficiently. The system allows staff to manage categories, menu items, take orders, print bills, and track sales in real-time.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+User Authentication
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Register: New staff or admin can create an account.
 
-## Learning Laravel
+Login: Authenticate users to access the POS system.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Role-Based Access: Assign roles (e.g., admin, staff) to control access to features.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Logout: Securely log out from the system.
 
-## Laravel Sponsors
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Menu Management
 
-### Premium Partners
+Add Items: Add new dishes or products to the menu.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Edit Items: Update the details of existing menu items.
 
-## Contributing
+Delete Items: Remove items from the menu.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+View Menu: Display all menu items with their categories.
 
-## Code of Conduct
+Category Management: Organize items into categories for easier navigation.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-## Security Vulnerabilities
+Order Management
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Create Order: Take orders for students/customers.
 
-## License
+Update Order: Modify an existing order before finalization.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+View Orders: Display all active and completed orders.
+
+Print Invoice: Generate and print a receipt for each order.
+
+
+Sales Management
+
+View Total Sales: Show total sales to date.
+
+Daily Sales: Display sales for a specific day.
+
+Sales Reports: Generate reports for selected periods.
+
+
+Usage
+
+1. Register a new account (staff/admin).
+
+
+2. Login using your credentials.
+
+
+3. Navigate to the Menu Management section to add, edit, or delete menu items.
+
+
+4. Go to Order Management to take or update orders.
+
+
+5. Print the invoice for completed orders.
+
+
+6. Access Sales Management to track daily or total sales.
+
+
+
+Technologies
+
+Backend: Laravel
+
+Frontend: React.js / Blade templates
+
+Database: MySQL
+
+PDF/Print: TCPDF or similar library
+
+
+Installation
+
+1. Clone the repository.
+
+
+2. Run composer install to install backend dependencies.
+
+
+3. Run npm install for frontend dependencies.
+
+
+4. Configure .env with database and application settings.
+
+
+5. Run php artisan migrate --seed to create and seed tables.
+
+
+6. Start the development server using php artisan serve.
+
+
+
+Contributing
+
+Fork the repository.
+
+Create a new branch for your feature: git checkout -b feature-name.
+
+Commit your changes and push the branch.
+
+Open a Pull Request describing your changes.
+
+
+License
+
+This project is open-source and available under the MIT License.
