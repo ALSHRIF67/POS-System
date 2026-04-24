@@ -78,21 +78,21 @@ td {
 .grand {
     font-size: 16px;
     border-top: 2px dashed #000;
-    padding-top: 5px;
+    padding-top: 7px;
 }
 
 .footer {
     text-align: center;
     margin-top: 10px;
-    font-size: 13px;
+    font-size: 10px;
 }
 
 </style>
 </head>
 <body>
 
-<div class="center" style="font-size:18px">بيت شاروما</div>
-<div class="center">نظام نقاط البيع</div>
+<div class="center" style="font-size:18px">أقاشي أم روابة </div>
+<div class="center">  </div>
 <div class="line"></div>
 
 <div style="text-align:right;">
@@ -131,14 +131,14 @@ td {
 <div class="line"></div>
 
 <div class="total-section">
-<div class="total-row"><span>المجموع الفرعي</span><span>{{ number_format($order->subtotal, 2) }}</span></div>
+<div class="total-row"><span>المجموع الفرعي</span><span style=" width: 122.615; ">{{ number_format($order->subtotal, 2) }}</span></div>
 @if($order->tax > 0)
 <div class="total-row"><span>الضريبة</span><span>{{ number_format($order->tax, 2) }}</span></div>
 @endif
 @if($order->discount > 0)
 <div class="total-row"><span>الخصم</span><span>{{ number_format($order->discount, 2) }}</span></div>
 @endif
-<div class="total-row grand"><span>الإجمالي</span><span>{{ number_format($order->total, 2) }}</span></div>
+<div class="total-row grand"><span>الإجمالي</span><span style=" width: 122.615; ">{{ number_format($order->total, 2) }}</span></div>
 </div>
 
 <div class="line"></div>
@@ -153,10 +153,7 @@ td {
 @endswitch
 </div>
 
-<div class="footer">
-شكراً لتسوقكم معنا<br>
-نتمنى لكم يوماً سعيداً
-</div>
+<div class="footer">   الحقيقي<br>طعم الأقاشي  </div>
 
 </body>
 </html>
